@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Monitor Portal – Lyo & Lya</title>
+  <title>Monitor Portal</title>
   <style>
     body {
      margin: 0;
@@ -150,28 +150,34 @@
     </div>
   </div>
 
-  <script>
-    const echoLog = document.getElementById('echoLog');
 
-    function getTimeStamp() {
-      return new Date().toLocaleString();
-    }
+<script>
+    function simulateWhisper() {
+      const type = document.getElementById('whisperSelect').value;
+      const now = new Date().toLocaleString();
+      const log = document.getElementById('echoLog');
 
-    function logWhisper() {
-      const type = document.getElementById('whisperType').value;
-      const timestamp = getTimeStamp();
-      const message = `${type} received from the Timecove at ${timestamp}`;
+      const emojiMap = {
+        twist: "🌀",
+        flicker: "🔥",
+        murmur: "💭",
+        wave: "🌊",
+        shimmer: "✨"
+      };
 
-      // Remove placeholder
-      if (echoLog.children.length === 1 && echoLog.children[0].innerText.includes("No new echoes")) {
-        echoLog.innerHTML = '';
-      }
+      const nameMap = {
+        twist: "Twist",
+        flicker: "Flicker",
+        murmur: "Murmur",
+        wave: "Wave",
+        shimmer: "Shimmer"
+      };
 
-      // Create log entry
-      const entry = document.createElement('div');
-      entry.classList.add('log-entry');
-      entry.innerText = message;
-      echoLog.prepend(entry); // newest on top
+      const newEntry = document.createElement("div");
+      newEntry.className = "log-entry " + type;
+      newEntry.innerHTML = `<span class="emoji">${emojiMap[type]}</span>${nameMap[type]} received from the Timecove at ${now}`;
+
+      log.prepend(newEntry);
     }
   </script>
 
