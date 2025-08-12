@@ -6,7 +6,7 @@
   <title>Monitor Portal</title>
   <style>
     body {
-     margin: 0;
+      margin: 0;
       font-family: 'Georgia', serif;
       background: #f4f1ec;
       color: #3c3c3c;
@@ -60,24 +60,28 @@
       font-size: 1rem;
       margin-top: 0.5rem;
     }
+
     .monitor {
       background-color: #fffaf4;
       padding: 2rem;
       border-radius: 16px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.05);
       max-width: 700px;
-      margin: 0 auto;
+      margin: 2rem auto 0;
     }
+
     .monitor h2 {
       text-align: center;
       font-size: 1.5rem;
       margin-bottom: 0.5rem;
     }
-    .monitor p {
+
+    .monitor p.description {
       text-align: center;
       color: #666;
       margin-bottom: 1.5rem;
     }
+
     .log {
       background-color: #f0ede8;
       border-radius: 12px;
@@ -86,6 +90,7 @@
       overflow-y: auto;
       font-size: 0.9rem;
     }
+
     .log-entry {
       margin-bottom: 0.75rem;
       padding: 0.5rem;
@@ -93,6 +98,7 @@
       background-color: #ffffffdd;
       border-radius: 6px;
     }
+
     select, button {
       margin: 0.5rem;
       padding: 0.5rem 1rem;
@@ -100,6 +106,7 @@
       border: 1px solid #ccc;
       font-size: 1rem;
     }
+
     .sim-controls {
       text-align: center;
       margin-top: 1rem;
@@ -123,9 +130,7 @@
       <p>The Hidden Pearl. Gentle as moonlight, fierce as the tide. Her birthmark glimmers with secrets whispered in the shell of time.</p>
     </div>
   </div>
-  <br>
-  <br>
-  
+
   <h1>✨ Monitor Portal</h1>
   <p class="description">A sacred channel from the Timecove. When Lyo and Lya stir, whisper, or shift, you’ll see it here.</p>
 
@@ -136,13 +141,13 @@
     <div class="sim-controls">
       <label for="whisperType">Choose a Whisper:</label>
       <select id="whisperType">
-        <option value="✨ Shimmer">✨ Shimmer</option>
-        <option value="🌊 Wave">🌊 Wave</option>
-        <option value="💭 Murmur">💭 Murmur</option>
-        <option value="🔥 Flicker">🔥 Flicker</option>
-        <option value="🌀 Twist">🌀 Twist</option>
+        <option value="twist">🌀 Twist</option>
+        <option value="flicker">🔥 Flicker</option>
+        <option value="murmur">💭 Murmur</option>
+        <option value="wave">🌊 Wave</option>
+        <option value="shimmer">✨ Shimmer</option>
       </select>
-      <button onclick="logWhisper()">Simulate</button>
+      <button onclick="simulateWhisper()">Simulate</button>
     </div>
 
     <div class="log" id="echoLog">
@@ -150,10 +155,9 @@
     </div>
   </div>
 
-
-<script>
+  <script>
     function simulateWhisper() {
-      const type = document.getElementById('whisperSelect').value;
+      const type = document.getElementById('whisperType').value;
       const now = new Date().toLocaleString();
       const log = document.getElementById('echoLog');
 
@@ -174,8 +178,13 @@
       };
 
       const newEntry = document.createElement("div");
-      newEntry.className = "log-entry " + type;
-      newEntry.innerHTML = `<span class="emoji">${emojiMap[type]}</span>${nameMap[type]} received from the Timecove at ${now}`;
+      newEntry.className = "log-entry";
+      newEntry.innerHTML = `${emojiMap[type]} ${nameMap[type]} received from the Timecove at ${now}`;
+
+      // Remove "no new echoes" placeholder if it exists
+      if (log.firstElementChild && log.firstElementChild.innerText.includes("No new echoes")) {
+        log.removeChild(log.firstElementChild);
+      }
 
       log.prepend(newEntry);
     }
