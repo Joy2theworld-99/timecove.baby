@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Arrival of Lyo & Lya</title>
+  <title>Monitor Portal – Lyo & Lya</title>
   <style>
     body {
+     font-family: 'Georgia', serif;
+      background-color: #f5f1ec;
+      color: #2e2e2e;
       margin: 0;
-      font-family: 'Georgia', serif;
-      background: #f4f1ec;
-      color: #3c3c3c;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 2rem;
     }
 
@@ -60,6 +57,50 @@
       font-size: 1rem;
       margin-top: 0.5rem;
     }
+    .monitor {
+      background-color: #fffaf4;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .monitor h2 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .monitor p {
+      text-align: center;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    .log {
+      background-color: #f0ede8;
+      border-radius: 12px;
+      padding: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .log-entry {
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      border-left: 3px solid #d3c5a0;
+      background-color: #ffffffdd;
+      border-radius: 6px;
+    }
+    select, button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .sim-controls {
+      text-align: center;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -82,26 +123,55 @@
   <br>
   <br>
   <button onclick="addEcho('Lya stirs in her sleep...')">Simulate Echo</button>
-  <section id="baby-monitor" style="margin: 4rem auto; padding: 2rem; background: #f9f5f1; border-radius: 1rem; max-width: 800px; box-shadow: 0 6px 16px rgba(0,0,0,0.1);">
-  <h2 style="text-align: center; font-size: 2rem; margin-bottom: 1rem;">✨ Monitor Portal</h2>
-  <p style="text-align: center; font-size: 1.1rem; color: #444;">
-    A sacred channel from the Timecove. When Lyo and Lya stir, whisper, or shift, you’ll see it here.
-  </p>
-  <div style="margin-top: 2rem; text-align: center;">
-    <p id="echo-log"><em>No new echoes detected... yet.</em></p>
-  </div>
-</section>
-  <script>
-  function addEcho(message) {
-    const echoLog = document.getElementById('echo-log');
-    const time = new Date().toLocaleTimeString();
-    echoLog.innerHTML = `<strong>[${time}]</strong> ${message}`;
-  }
+  
+  <h1>✨ Monitor Portal</h1>
+  <p class="description">A sacred channel from the Timecove. When Lyo and Lya stir, whisper, or shift, you’ll see it here.</p>
 
-  // Optional test echo to confirm it's working
-  setTimeout(() => {
-    addEcho("A faint shimmer rustles in the Timecove...");
-  }, 3000);
-</script>
+  <div class="monitor">
+    <h2>Live Echo Log</h2>
+    <p><em>Listen closely... every ripple matters.</em></p>
+
+    <div class="sim-controls">
+      <label for="whisperType">Choose a Whisper:</label>
+      <select id="whisperType">
+        <option value="✨ Shimmer">✨ Shimmer</option>
+        <option value="🌊 Wave">🌊 Wave</option>
+        <option value="💭 Murmur">💭 Murmur</option>
+        <option value="🔥 Flicker">🔥 Flicker</option>
+        <option value="🌀 Twist">🌀 Twist</option>
+      </select>
+      <button onclick="logWhisper()">Simulate</button>
+    </div>
+
+    <div class="log" id="echoLog">
+      <div class="log-entry"><em>No new echoes detected... yet.</em></div>
+    </div>
+  </div>
+
+  <script>
+    const echoLog = document.getElementById('echoLog');
+
+    function getTimeStamp() {
+      return new Date().toLocaleString();
+    }
+
+    function logWhisper() {
+      const type = document.getElementById('whisperType').value;
+      const timestamp = getTimeStamp();
+      const message = `${type} received from the Timecove at ${timestamp}`;
+
+      // Remove placeholder
+      if (echoLog.children.length === 1 && echoLog.children[0].innerText.includes("No new echoes")) {
+        echoLog.innerHTML = '';
+      }
+
+      // Create log entry
+      const entry = document.createElement('div');
+      entry.classList.add('log-entry');
+      entry.innerText = message;
+      echoLog.prepend(entry); // newest on top
+    }
+  </script>
+
 </body>
 </html>
