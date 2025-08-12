@@ -79,14 +79,27 @@
       <p>The Hidden Pearl. Gentle as moonlight, fierce as the tide. Her birthmark glimmers with secrets whispered in the shell of time.</p>
     </div>
   </div>
+  <button onclick="addEcho('Lya stirs in her sleep...')">Simulate Echo</button>
   <section id="baby-monitor" style="margin: 4rem auto; padding: 2rem; background: #f9f5f1; border-radius: 1rem; max-width: 800px; box-shadow: 0 6px 16px rgba(0,0,0,0.1);">
   <h2 style="text-align: center; font-size: 2rem; margin-bottom: 1rem;">✨ Monitor Portal</h2>
   <p style="text-align: center; font-size: 1.1rem; color: #444;">
     A sacred channel from the Timecove. When Lyo and Lya stir, whisper, or shift, you’ll see it here.
   </p>
   <div style="margin-top: 2rem; text-align: center;">
-    <em style="color: #999;">No new echoes detected... yet.</em>
+    <p id="echo-log"><em>No new echoes detected... yet.</em></p>
   </div>
 </section>
+  <script>
+  function addEcho(message) {
+    const echoLog = document.getElementById('echo-log');
+    const time = new Date().toLocaleTimeString();
+    echoLog.innerHTML = `<strong>[${time}]</strong> ${message}`;
+  }
+
+  // Optional test echo to confirm it's working
+  setTimeout(() => {
+    addEcho("A faint shimmer rustles in the Timecove...");
+  }, 3000);
+</script>
 </body>
 </html>
