@@ -27,6 +27,15 @@
   }
   h1{margin:6px 0 2px; font-weight:900; letter-spacing:.5px; text-align:center}
 
+  /* ===== Streak panel ===== */
+  .streak{ width:min(1120px,96vw); background:var(--card); border:1px solid rgba(255,255,255,.07);
+           border-radius:18px; padding:10px 12px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
+  .streak .grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px }
+  .streak h3{ margin:0 0 6px; font-size:14px; color:#cfd6de; letter-spacing:.3px }
+  .srow{ display:flex; gap:12px; align-items:center; font-weight:800 }
+  .sname{ width:64px }
+  .schip{ background:#22262c; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.06); font-size:12px }
+
   .row{
     --stage: clamp(260px, 44vw, 360px);
     display:flex; gap:24px; flex-wrap:wrap; justify-content:center; width:100%;
@@ -80,7 +89,7 @@
   .cooldown{ animation:cooldown .9s ease forwards }
   @keyframes cooldown{ to{ opacity:0; transform:scale(.88) } }
 
-  /* Gentle nudge pulse for unattended diaper */
+  /* Gentle nudge pulse for unattended diaper or overdue */
   .nudgePulse{ animation:nudgePulse .9s ease-in-out 3 }
   @keyframes nudgePulse{
     0%{ transform:scale(1) }
@@ -96,9 +105,13 @@
     transition:transform .06s ease, filter .2s ease; font-size:15px;
   }
   .pill:active{ transform:translateY(1px) }
-  .resolve{ display:none }
+
+  /* SHOW resolve buttons again (fix from last iteration) */
+  .resolve{ display:inline-flex; align-items:center; gap:8px }
+
   .resolve.hungry{ background:var(--hungry) }
   .resolve.diaper{ background:var(--diaper) }
+  .resolve.ghost{ background:#2b2e35; color:var(--text) }
 
   .toggle{ background:#2b2e35; color:var(--text) }
   .toggle.active.calm{ background:var(--calm) }
@@ -158,6 +171,25 @@
 <body>
 
 <h1>Timecove Monitor: Lyo & Lya</h1>
+
+<!-- STREAK SUMMARY -->
+<section class="streak" id="streak">
+  <h3>Streaks & Today</h3>
+  <div class="grid">
+    <div class="srow">
+      <div class="sname">Lyo</div>
+      <div id="s-lyo-today"  class="schip">🍼 0 today</div>
+      <div id="s-lyo-streak" class="schip">Streak 0</div>
+      <div id="s-lyo-record" class="schip">Record 0</div>
+    </div>
+    <div class="srow">
+      <div class="sname">Lya</div>
+      <div id="s-lya-today"  class="schip">🍼 0 today</div>
+      <div id="s-lya-streak" class="schip">Streak 0</div>
+      <div id="s-lya-record" class="schip">Record 0</div>
+    </div>
+  </div>
+</section>
 
 <div class="row">
   <!-- LYO -->
@@ -257,12 +289,16 @@ const DIAPER_ON_WAKE_PROB = 0.25;
 /* Gentle nudge if diaper unresolved >= this many minutes */
 const DIAPER_NUDGE_MIN = DEMO ? 5 : 10;
 
+/* NEW: Nudge if Hungry is cleared without feeding */
+const OVERDUE_CHECK_MIN = DEMO ? 7 : 7;      // minutes
+const STREAK_GRACE_MIN  = DEMO ? 10 : 10;    // grace beyond expected for streak
+
 const SLEEP_RANDOM = {
   min: DEMO ? 3 : 30,
   max: DEMO ? 7 : 120
 };
 
-const STORAGE_KEY = 'timecove.twins.v5';
+const STORAGE_KEY = 'timecove.twins.v6'; // bump version for new fields
 
 const COLOR = {
   hungry: css('--hungry'),
@@ -290,6 +326,7 @@ function tone(freq, dur=0.15, gain=0.06, type='sine', when=0){
 }
 function chimeHungry(){ if(!unlocked) return; ensureAudio(); tone(880,.16,.06,'sine',0); tone(1318.5,.18,.05,'triangle',.08); }
 function chimeFed(){ if(!unlocked) return; ensureAudio(); tone(659.25,.12,.05,'sine',0); tone(523.25,.14,.05,'sine',.08); }
+function chimeOverdue(){ if(!unlocked) return; ensureAudio(); tone(392,.14,.06,'sine',0); tone(523.25,.16,.06,'triangle',.1); }
 
 /* -------- Notifications (toast + optional vibrate + Web Notification) -------- */
 function toast(msg, cls=''){
@@ -317,9 +354,30 @@ async function notify(msg, color=''){
 
 /* --------- MODEL (with persistence) --------- */
 const model = {
-  lyo:  { mood:'calm', needs:[], nextFeedAt:null, bottle:'EchoSip', log:[], diaperLog:[], intervalMin:135, wakeAt:null, diaperSince:null, lastDiaperNudge:null },
-  lya:  { mood:'calm', needs:[], nextFeedAt:null, bottle:'EchoSip', log:[], diaperLog:[], intervalMin:165, wakeAt:null, diaperSince:null, lastDiaperNudge:null }
+  lyo:  initTwin(135),
+  lya:  initTwin(165)
 };
+function initTwin(intervalMin){
+  return {
+    mood:'calm',
+    needs:[],
+    nextFeedAt:null,
+    expectedNextFeedAt:null,  // for streak on-time calc
+    lastFedAt:null,
+    bottle:'EchoSip',
+    log:[],
+    diaperLog:[],
+    intervalMin,
+    wakeAt:null,
+    diaperSince:null,
+    lastDiaperNudge:null,
+    // overdue nudge state
+    overdueTimer:null,
+    overdueScheduledAt:null,
+    // streaks
+    streak:{ consecutive:0, record:0, today:{} }
+  };
+}
 
 function loadState(){
   try{
@@ -335,6 +393,7 @@ function saveState(){
 /* -------- Feeding timers -------- */
 function scheduleNextFeed(id){
   model[id].nextFeedAt = Date.now() + model[id].intervalMin * MILLIS_PER_MIN;
+  model[id].expectedNextFeedAt = model[id].nextFeedAt; // mirror for clarity
   saveState();
 }
 function ensureTimers(){
@@ -391,22 +450,19 @@ function checkDiaperNudge(id){
   const threshold = DIAPER_NUDGE_MIN;
   const last = model[id].lastDiaperNudge || 0;
 
-  // Nudge first time after threshold; then again every threshold minutes
   if(elapsedMin >= threshold && (Date.now()-last) >= threshold*MILLIS_PER_MIN){
     model[id].lastDiaperNudge = Date.now();
     saveState();
     notify(`${cap(id)} still needs a diaper change`, 't-orange');
 
-    // pulse the orange ring briefly if visible
     const g = document.getElementById(id+'-rings');
     const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke === COLOR.diaper);
     if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2800); }
   }
 
-  // Show waiting time text
   const waitEl = document.getElementById(id+'-diaper-wait');
   const mins = Math.floor(elapsedMin);
-  const secs = Math.floor((elapsedMin - mins) * (DEMO?60:60)); // same visual both modes
+  const secs = Math.floor((elapsedMin - mins) * 60);
   waitEl.textContent = `Diaper waiting: ${mins}m ${String(secs).padStart(2,'0')}s`;
 }
 function clearDiaperTimers(id){
@@ -414,26 +470,75 @@ function clearDiaperTimers(id){
   model[id].lastDiaperNudge = null;
 }
 
+/* -------- Overdue nudge if Hungry cleared w/o feed -------- */
+function clearHungryWithoutFeeding(id){
+  // remove Hungry ring, start a short check window
+  const idx = model[id].needs.indexOf('Hungry');
+  if(idx>-1) model[id].needs.splice(idx,1);
+  renderChild(id); saveState();
+
+  // (re)start overdue timer
+  if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); }
+  model[id].overdueScheduledAt = Date.now();
+
+  model[id].overdueTimer = setTimeout(()=>{
+    // If no feed occurred since scheduling, nudge & re-show Hungry ring visually
+    const since = model[id].overdueScheduledAt;
+    if(!model[id].lastFedAt || model[id].lastFedAt < since){
+      notify(`${cap(id)} might still be hungry — want to double check?`, 't-red');
+      chimeOverdue();
+      // re-surface Hungry as a gentle reminder
+      if(!model[id].needs.includes('Hungry')){
+        model[id].needs.push('Hungry');
+        const g = document.getElementById(id+'-rings');
+        renderChild(id);
+        const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke===COLOR.hungry);
+        if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2600); }
+      }
+    }
+    model[id].overdueTimer = null;
+    model[id].overdueScheduledAt = null;
+    saveState();
+  }, OVERDUE_CHECK_MIN * MILLIS_PER_MIN);
+  saveState();
+}
+
 /* -------- Resolve actions -------- */
 function feedBaby(id){
+  const isHungry = model[id].needs.includes('Hungry');
+
   const idx = model[id].needs.indexOf('Hungry');
   if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
 
-  const entry = { ts: Date.now(), bottle: model[id].bottle || 'Bottle' };
+  const tNow = Date.now();
+
+  // streak on-time: compare to expectedNextFeedAt + grace
+  const expectedBy = model[id].expectedNextFeedAt ?? model[id].nextFeedAt ?? tNow;
+  const onTime = tNow <= (expectedBy + STREAK_GRACE_MIN * MILLIS_PER_MIN);
+  updateStreak(id, onTime);
+
+  // log the feed
+  const entry = { ts: tNow, bottle: model[id].bottle || 'Bottle' };
   model[id].log.unshift(entry);
   if(model[id].log.length>30) model[id].log.length = 30;
 
+  model[id].lastFedAt = tNow;
+
+  // cancel any pending overdue check
+  if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); model[id].overdueTimer=null; model[id].overdueScheduledAt=null; }
+
   scheduleNextFeed(id);
-  renderChild(id); saveState(); chimeFed();
+  renderChild(id); saveState();
+  if(isHungry) chimeFed();
   notify(`Fed ${cap(id)}`, 't-teal');
 }
+
 function changeDiaper(id){
   const idx = model[id].needs.indexOf('Diaper');
   if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
 
-  // log the change
   model[id].diaperLog.unshift({ ts: Date.now(), note:'Changed' });
   if(model[id].diaperLog.length>30) model[id].diaperLog.length = 30;
 
@@ -441,9 +546,39 @@ function changeDiaper(id){
   renderChild(id); saveState();
   notify(`${cap(id)} is fresh & comfy`, 't-teal');
 
-  // clear wait label
   const waitEl = document.getElementById(id+'-diaper-wait');
   if(waitEl) waitEl.textContent = '';
+}
+
+/* ------- STREAKS ------- */
+function dayKey(ts=Date.now()){ const d=new Date(ts); d.setHours(0,0,0,0); return String(d.getTime()); }
+function updateStreak(id, onTime){
+  const s = model[id].streak || (model[id].streak={consecutive:0,record:0,today:{}});
+  s.consecutive = onTime ? s.consecutive+1 : 0;
+  if(s.consecutive > (s.record||0)) s.record = s.consecutive;
+
+  const k = dayKey();
+  s.today[k] = (s.today[k]||0) + 1;
+
+  // prune to ~8 days
+  const cutoff = Date.now() - 8*24*60*60*1000;
+  for(const key of Object.keys(s.today)){
+    if(Number(key) < cutoff){ delete s.today[key]; }
+  }
+  renderStreakPanel();
+}
+function todayCount(id){
+  const s = model[id].streak || { today:{} };
+  return s.today[dayKey()] || 0;
+}
+function renderStreakPanel(){
+  const twins = ['lyo','lya'];
+  twins.forEach(id=>{
+    const s = model[id].streak || { consecutive:0, record:0, today:{} };
+    document.getElementById(`s-${id}-today`).textContent  = `🍼 ${todayCount(id)} today`;
+    document.getElementById(`s-${id}-streak`).textContent = `Streak ${s.consecutive||0}`;
+    document.getElementById(`s-${id}-record`).textContent = `Record ${s.record||0}`;
+  });
 }
 
 /* ------- RENDERING ------- */
@@ -478,36 +613,43 @@ function renderChild(id){
   // resolve controls
   const controls = $(id+'-controls'); controls.innerHTML='';
   if(needs.includes('Hungry')){
+    // Feed
     const b = document.createElement('button');
     b.className='pill resolve hungry'; b.textContent='Feed';
     b.onclick=()=>{
-      const ring = g.querySelector('.ring'); // first (might be hungry)
+      const ring = g.querySelector('.ring'); // first (likely hungry)
       if(ring){ ring.classList.add('cooldown'); setTimeout(()=>feedBaby(id), 900); }
       else feedBaby(id);
     };
     controls.appendChild(b);
+
+    // Clear Hungry (no feed) -> overdue check
+    const c = document.createElement('button');
+    c.className='pill resolve ghost'; c.textContent='Clear Hungry (no feed)';
+    c.onclick=()=>{ clearHungryWithoutFeeding(id); };
+    controls.appendChild(c);
   }
   if(needs.includes('Diaper')){
-    const b = document.createElement('button');
-    b.className='pill resolve diaper'; b.textContent='Change Diaper';
-    b.onclick=()=>{
+    const d = document.createElement('button');
+    d.className='pill resolve diaper'; d.textContent='Change Diaper';
+    d.onclick=()=>{
       const rings = [...g.querySelectorAll('.ring')];
       const orange = rings.find(r=>r.style.stroke===COLOR.diaper);
       if(orange){ orange.classList.add('cooldown'); setTimeout(()=>changeDiaper(id), 900); }
       else changeDiaper(id);
     };
-    controls.appendChild(b);
+    controls.appendChild(d);
   }
 
   // mood toggles
   const moodRow = $(id+'-mood'); moodRow.innerHTML='';
   const calmBtn = document.createElement('button');
-  calmBtn.className = 'pill toggle ' + (model[id].mood==='calm' ? 'active calm':'');
+  calmBtn.className = 'pill toggle ' + (model[id].mood==='calm' ? 'active calm':'' );
   calmBtn.textContent = 'Set Calm';
   calmBtn.onclick = ()=>{ model[id].mood='calm'; model[id].wakeAt=null; renderChild(id); saveState(); };
 
   const sleepBtn = document.createElement('button');
-  sleepBtn.className = 'pill toggle ' + (model[id].mood==='sleeping' ? 'active sleep':'');
+  sleepBtn.className = 'pill toggle ' + (model[id].mood==='sleeping' ? 'active sleep':'' );
   sleepBtn.textContent = 'Set Sleeping';
   sleepBtn.onclick = ()=>{ model[id].mood='sleeping'; scheduleRandomWake(id); renderChild(id); saveState(); };
 
@@ -523,6 +665,9 @@ function renderChild(id){
     const mins = Math.floor((Date.now()-model[id].diaperSince)/MILLIS_PER_MIN);
     waitEl.textContent = `Diaper waiting: ${mins}m`;
   } else { waitEl.textContent = ''; }
+
+  // streak panel refresh on every render
+  renderStreakPanel();
 }
 
 function renderLogs(id){
@@ -617,6 +762,4 @@ function cap(id){ return id==='lyo'?'Lyo':'Lya'; }
 </script>
 </body>
 </html>
-
-
 
