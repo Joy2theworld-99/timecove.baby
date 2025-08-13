@@ -2,61 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Timecove Monitor</title>
   <style>
     body {
-      background-color: #111;
+      background: #111;
       color: #fff;
       font-family: 'Segoe UI', sans-serif;
       text-align: center;
-      padding: 2rem;
+      padding: 20px;
     }
-
     h1 {
-      font-size: 2rem;
-      margin-bottom: 2rem;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
     }
-
-    .monitor {
+    .container {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
+      justify-content: center;
       gap: 2rem;
     }
-
-    @media (min-width: 768px) {
-      .monitor {
-        flex-direction: row;
-        justify-content: center;
-      }
-    }
-
-    .panel {
-      background-color: #1a1a1a;
+    .card {
+      background: #1c1c1c;
       padding: 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-      flex: 1;
-      max-width: 360px;
-      margin: auto;
+      border-radius: 15px;
+      width: 300px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
     }
-
-    .name {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
+    .card img {
+      width: 100px;
+      filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.25));
     }
-
-    .aura {
-      margin-bottom: 1rem;
-    }
-
-    .aura img {
-      width: 120px;
-      border-radius: 100%;
-      transition: box-shadow 0.5s;
-    }
-
     .states button {
       margin: 0.25rem;
       padding: 0.5rem 1rem;
@@ -66,158 +42,129 @@
       color: #fff;
       cursor: pointer;
     }
-
-    .calm { background-color: #3fbfbb; }
-    .alert { background-color: #f44336; }
-    .dreaming { background-color: #6a1b9a; }
-    .sleeping { background-color: #37474f; }
-
-    .feed-button {
-      margin: 1rem 0;
-    }
-
-    .feed-button button {
-      padding: 0.7rem 1.2rem;
+    .calm { background: #2ec4b6; }
+    .alert { background: #e63946; }
+    .dreaming { background: #7b2cbf; }
+    .sleeping { background: #3a506b; }
+    .feed-btn {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
       font-size: 1rem;
-      border: 2px solid #fff;
-      border-radius: 8px;
-      background: #fff;
-      color: #000;
       font-weight: bold;
+      border-radius: 10px;
+      border: none;
       cursor: pointer;
     }
-
-    .feed-button button:disabled {
-      background-color: #ccc;
-      color: #555;
-      border-color: #777;
-      cursor: not-allowed;
-    }
-
-    .cooldown {
-      font-size: 0.9rem;
-      color: #ccc;
-      margin-top: 0.3rem;
-    }
-
     .log {
-      font-size: 0.85rem;
-      text-align: left;
       margin-top: 1rem;
+      font-size: 0.85rem;
       background: #222;
-      padding: 0.8rem;
+      padding: 0.75rem;
       border-radius: 8px;
-      color: #aaa;
-      max-height: 100px;
-      overflow-y: auto;
     }
-
-    .log-entry {
-      margin-bottom: 0.3rem;
+    .aura {
+      transition: filter 0.5s;
+    }
+    @media (max-width: 700px) {
+      .card {
+        width: 90%;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Timecove Monitor: Lyo & Lya</h1>
-  <div class="monitor">
-    <div class="panel" id="panelLyo">
-      <div class="name">Lyo</div>
-      <div class="aura">
-        <img id="auraLyo" src="Lyo_Glyph_Clear.png" alt="Lyo">
-      </div>
+  <div class="container">
+    <div class="card" id="lyoCard">
+      <h2>Lyo</h2>
+      <img id="lyoAura" src="Lyo_Glyph_Clear.png" class="aura" alt="Lyo Pebble">
       <div class="states">
-        <button class="calm" onclick="setAura('Lyo','#3fbfbb')">Calm</button>
-        <button class="alert" onclick="setAura('Lyo','#f44336')">Alert</button>
-        <button class="dreaming" onclick="setAura('Lyo','#6a1b9a')">Dreaming</button>
-        <button class="sleeping" onclick="setAura('Lyo','#37474f')">Sleeping</button>
+        <button class="calm" onclick="setState('lyo', 'calm')">Calm</button>
+        <button class="alert" onclick="setState('lyo', 'alert')">Alert</button>
+        <button class="dreaming" onclick="setState('lyo', 'dreaming')">Dreaming</button>
+        <button class="sleeping" onclick="setState('lyo', 'sleeping')">Sleeping</button>
       </div>
-      <div class="feed-button">
-        <button id="feedLyoBtn" onclick="feed('Lyo','Dreammilk',6)">Feed Lyo (Dreammilk)</button>
-        <div class="cooldown" id="lyoCooldown"></div>
-      </div>
+      <button class="feed-btn" onclick="feed('lyo')">Feed Lyo (Dreammilk)</button>
+      <p id="lyoCooldown"></p>
       <div class="log" id="lyoLog"></div>
     </div>
 
-    <div class="panel" id="panelLya">
-      <div class="name">Lya</div>
-      <div class="aura">
-        <img id="auraLya" src="Lya_Glyph_Clear.png" alt="Lya">
-      </div>
+    <div class="card" id="lyaCard">
+      <h2>Lya</h2>
+      <img id="lyaAura" src="Lya_Glyph_Clear.png" class="aura" alt="Lya Pebble">
       <div class="states">
-        <button class="calm" onclick="setAura('Lya','#3fbfbb')">Calm</button>
-        <button class="alert" onclick="setAura('Lya','#f44336')">Alert</button>
-        <button class="dreaming" onclick="setAura('Lya','#6a1b9a')">Dreaming</button>
-        <button class="sleeping" onclick="setAura('Lya','#37474f')">Sleeping</button>
+        <button class="calm" onclick="setState('lya', 'calm')">Calm</button>
+        <button class="alert" onclick="setState('lya', 'alert')">Alert</button>
+        <button class="dreaming" onclick="setState('lya', 'dreaming')">Dreaming</button>
+        <button class="sleeping" onclick="setState('lya', 'sleeping')">Sleeping</button>
       </div>
-      <div class="feed-button">
-        <button id="feedLyaBtn" onclick="feed('Lya','Dreammilk',6)">Feed Lya (Dreammilk)</button>
-        <div class="cooldown" id="lyaCooldown"></div>
-      </div>
+      <button class="feed-btn" onclick="feed('lya')">Feed Lya (Dreammilk)</button>
+      <p id="lyaCooldown"></p>
       <div class="log" id="lyaLog"></div>
     </div>
   </div>
 
   <script>
-    const cooldowns = {};
+    const FEED_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours in ms
 
-    function loadLogs(name) {
-      const log = document.getElementById(`${name.toLowerCase()}Log`);
-      const saved = localStorage.getItem(`${name}Log`);
-      if (saved) log.innerHTML = saved;
-      else log.innerHTML = '<div class="log-entry">No recent feedings.</div>';
+    function setState(twin, state) {
+      localStorage.setItem(`${twin}State`, state);
+      updateAura(twin);
     }
 
-    function saveLogs(name) {
-      const log = document.getElementById(`${name.toLowerCase()}Log`).innerHTML;
-      localStorage.setItem(`${name}Log`, log);
+    function updateAura(twin) {
+      const state = localStorage.getItem(`${twin}State`) || 'calm';
+      const img = document.getElementById(`${twin}Aura`);
+      const filters = {
+        calm: 'drop-shadow(0 0 10px #2ec4b6)',
+        alert: 'drop-shadow(0 0 10px #e63946)',
+        dreaming: 'drop-shadow(0 0 10px #7b2cbf)',
+        sleeping: 'drop-shadow(0 0 10px #3a506b)',
+      };
+      img.style.filter = filters[state];
     }
 
-    function setAura(name, color) {
-      const aura = document.getElementById(`aura${name}`);
-      aura.style.boxShadow = `0 0 40px ${color}`;
+    function feed(twin) {
+      const now = new Date().getTime();
+      localStorage.setItem(`${twin}LastFed`, now);
+      logFeeding(twin, now);
+      updateCooldown(twin);
     }
 
-    function feed(name, type, cooldownHours) {
-      const btn = document.getElementById(`feed${name}Btn`);
-      const cooldownDisplay = document.getElementById(`${name.toLowerCase()}Cooldown`);
-      const log = document.getElementById(`${name.toLowerCase()}Log`);
+    function logFeeding(twin, timestamp) {
+      const log = document.getElementById(`${twin}Log`);
+      const time = new Date(timestamp).toLocaleTimeString();
+      log.textContent = `${time} — Fed with Dreammilk`;
+    }
 
-      const now = new Date();
-      const timestamp = now.toLocaleTimeString();
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.textContent = `${timestamp} — Fed with ${type}`;
-      if (log.children.length > 0 && log.children[0].textContent === 'No recent feedings.') {
-        log.innerHTML = '';
+    function updateCooldown(twin) {
+      const lastFed = parseInt(localStorage.getItem(`${twin}LastFed`) || 0);
+      const now = new Date().getTime();
+      const diff = FEED_INTERVAL - (now - lastFed);
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      const cooldown = document.getElementById(`${twin}Cooldown`);
+      if (diff > 0) {
+        cooldown.textContent = `Next feeding in ${hours}h ${minutes}m`;
+      } else {
+        cooldown.textContent = `Ready to feed!`;
       }
-      log.insertBefore(entry, log.firstChild);
-      if (log.children.length > 6) log.removeChild(log.lastChild);
-      saveLogs(name);
-
-      btn.disabled = true;
-      const cooldownMs = cooldownHours * 60 * 60 * 1000;
-      const endTime = new Date(now.getTime() + cooldownMs);
-      cooldownDisplay.textContent = `Next feeding in ${cooldownHours} hrs`;
-
-      cooldowns[name] = setInterval(() => {
-        const remaining = endTime - new Date();
-        if (remaining <= 0) {
-          clearInterval(cooldowns[name]);
-          btn.disabled = false;
-          cooldownDisplay.textContent = '';
-        } else {
-          const hrs = Math.floor(remaining / 3600000);
-          const mins = Math.floor((remaining % 3600000) / 60000);
-          cooldownDisplay.textContent = `Next feeding in ${hrs}h ${mins}m`;
-        }
-      }, 1000);
     }
 
-    // Load previous logs on page load
-    window.onload = () => {
-      loadLogs('Lyo');
-      loadLogs('Lya');
+    function loadTwin(twin) {
+      updateAura(twin);
+      updateCooldown(twin);
+      const lastFed = parseInt(localStorage.getItem(`${twin}LastFed`) || 0);
+      if (lastFed) logFeeding(twin, lastFed);
     }
+
+    // Initial load + refresh every minute
+    ['lyo', 'lya'].forEach(loadTwin);
+    setInterval(() => {
+      ['lyo', 'lya'].forEach(updateCooldown);
+    }, 60000);
   </script>
 </body>
 </html>
+
