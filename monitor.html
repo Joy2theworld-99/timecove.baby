@@ -56,7 +56,7 @@
   .resolve.hungry{background:var(--hungry)} .resolve.diaper{background:var(--diaper)}
   .resolve.soothe{background:var(--soothe)} .resolve.sick{background:var(--sick)}
   .resolve.ghost{background:#2b2e35;color:var(--text)}
-  .toggle{background:#2b2e35;color:var(--text)} .toggle.active.calm{background:var(--calm)} .toggle.active.sleep{background:var(--sleep)}
+  .toggle{background:#2b2e35;color:#fff} .toggle.active.calm{background:var(--calm)} .toggle.active.sleep{background:var(--sleep)}
 
   .meta{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
   .countdown{font-weight:800;color:#e9f5f6} .small{font-size:12px;color:#cfd6de}
@@ -77,6 +77,14 @@
   .toast{background:#1b1e22;color:#fff;border:1px solid rgba(255,255,255,.08);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.4);font-weight:700;font-size:14px;opacity:0;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease}
   .toast.show{opacity:1;transform:translateY(0)}
   .t-red{border-color:rgba(255,77,77,.35)} .t-orange{border-color:rgba(255,159,46,.35)} .t-teal{border-color:rgba(39,212,208,.35)} .t-blue{border-color:rgba(35,179,255,.35)} .t-purple{border-color:rgba(179,107,255,.35)}
+
+  /* Action buttons inside toasts */
+  .toast .actions { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap }
+  .toast .tbtn {
+    background:#2b2e35; color:#fff; border:1px solid rgba(255,255,255,.15);
+    font-weight:800; font-size:12px; padding:6px 10px; border-radius:999px; cursor:pointer;
+  }
+  .toast .tbtn:active { transform:translateY(1px) }
 </style>
 </head>
 <body>
@@ -189,43 +197,35 @@
    CONFIG & SPEED
 ========================= */
 const CONFIG = {
-  // Demo/Real-time (toggled in UI)
-  demo: true,                      // initial
+  demo: true,                       // toggled by the switch
   minuteMs(){ return this.demo ? 1000 : 60_000; },
 
-  // Random wake windows (minutes)
   sleepRandom(){ return { min: this.demo?3:60, max: this.demo?7:150 }; },
 
-  // Needs probabilities on wake
-  hungryOnWake: 0.20,  // slightly calmer
+  hungryOnWake: 0.20,
   diaperOnWake: 0.16,
 
-  // Nudges
   diaperNudgeMin(){ return this.demo?5:15; },
   overdueCheckMin(){ return this.demo?7:7; },
   streakGraceMin(){ return this.demo?10:10; },
 
-  // Sickness
-  sicknessDailyChance: 0.04,       // ~4% per “day” tick (see day pulse)
-  sicknessDurationMin(){ return this.demo?8:240; }, // minutes (demo vs real)
+  sicknessDailyChance: 0.04,
+  sicknessDurationMin(){ return this.demo?8:240; },
 
-  // Gentle play/tummy/giggles planners (minutes)
   playEvery(){ return this.demo?6:120; },
   tummyEvery(){ return this.demo?9:240; },
-  bathEvery(){ return this.demo?60:1440; },   // ~daily
-  doctorRareEvery(){ return this.demo?90:4320 }, // rare
+  bathEvery(){ return this.demo?60:1440; },
+  doctorRareEvery(){ return this.demo?90:4320 },
 
-  // After-feed side effect
   spitupChance: 0.08
 };
 
-const STORAGE_KEY = 'timecove.twins.v7';  // bump for new fields
+const STORAGE_KEY = 'timecove.twins.v8';  // version bump
 
 /* =========================
    UTIL
 ========================= */
 function now(){ return Date.now(); }
-function minute(ms){ return ms / CONFIG.minuteMs(); }
 function msFromMin(m){ return m * CONFIG.minuteMs(); }
 function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function chance(p){ return Math.random() < p; }
@@ -245,10 +245,91 @@ function chimeOverdue(){ if(!unlocked) return; ensureAudio(); tone(392,.14,.06,'
 function chimeSoothe(){ if(!unlocked) return; ensureAudio(); tone(520,.14,.05,'triangle',0);}
 
 /* =========================
-   NOTIFICATIONS / TOAST
+   NOTIFICATIONS & TOASTS
 ========================= */
-function toast(msg, cls=''){ const box=document.getElementById('toasts'); const el=document.createElement('div'); el.className=`toast ${cls}`; el.textContent=msg; box.appendChild(el); requestAnimationFrame(()=>el.classList.add('show')); setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),200); },3000); }
-async function notify(msg, cls=''){ try{ if('Notification' in window){ if(Notification.permission==='default'){ await Notification.requestPermission().catch(()=>{});} if(Notification.permission==='granted'){ const n=new Notification('Timecove',{body:msg,silent:true}); setTimeout(()=>n.close(),3500);} } }catch{} if(navigator.vibrate){ navigator.vibrate(40);} toast(msg, cls); }
+function toast(msg, cls=''){
+  const box=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${cls}`;
+  el.textContent=msg;
+  box.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),200); },3000);
+}
+async function notifyDesktop(msg){
+  try{
+    if('Notification' in window){
+      if(Notification.permission==='default'){ await Notification.requestPermission().catch(()=>{}); }
+      if(Notification.permission==='granted'){
+        const n = new Notification('Timecove', { body: msg, silent:true });
+        setTimeout(()=>n.close(), 3500);
+      }
+    }
+  }catch{}
+  if(navigator.vibrate){ navigator.vibrate(40); }
+}
+
+/* Actionable toast builder */
+function toastActions(msg, cls = '', actions = []) {
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${cls}`;
+  el.innerHTML = `
+    <div class="line">${html(msg)}</div>
+    <div class="actions"></div>
+  `;
+  const actionsWrap = el.querySelector('.actions');
+  actions.forEach(a => {
+    const b = document.createElement('button');
+    b.className = 'tbtn';
+    b.textContent = a.label;
+    b.onclick = () => {
+      try { a.handler && a.handler(); } finally {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 200);
+      }
+    };
+    actionsWrap.appendChild(b);
+  });
+  box.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  const life = actions.length ? 7000 : 3000;
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 200); }, life);
+}
+
+/* Wrappers with actions */
+function notifyHungry(id, msg = `${cap(id)} is hungry`) {
+  notifyDesktop(msg);
+  toastActions(msg, 't-red', [
+    { label: 'Feed',  handler: () => feedBaby(id) },
+    { label: 'Clear', handler: () => clearHungryNoFeed(id) }
+  ]);
+}
+function notifyDiaper(id, msg = `${cap(id)} needs a diaper change`) {
+  notifyDesktop(msg);
+  toastActions(msg, 't-orange', [
+    { label: 'Change Diaper', handler: () => changeDiaper(id) }
+  ]);
+}
+function notifySoothe(id, how = 'Rocking') {
+  const msg = `${cap(id)} needs ${how.toLowerCase()}`;
+  notifyDesktop(msg);
+  toastActions(msg, 't-blue', [
+    { label: how, handler: () => sootheBaby(id) }
+  ]);
+}
+function notifySick(id, msg = `${cap(id)} isn’t feeling well`) {
+  notifyDesktop(msg);
+  toastActions(msg, 't-purple', [
+    { label: 'Care Pack', handler: () => {
+        if (model[id].sickUntil) {
+          model[id].sickUntil = Math.min(model[id].sickUntil, now() + msFromMin(CONFIG.sicknessDurationMin()/3));
+          saveState();
+        }
+      }
+    }
+  ]);
+}
 
 /* =========================
    MODEL
@@ -271,7 +352,7 @@ function initTwin(intervalMin){
     lastFedAt:null, diaperSince:null, lastDiaperNudge:null,
     overdueTimer:null, overdueScheduledAt:null,
     isSick:false, sickUntil:null,
-    // planners (next scheduled “nice” events)
+    // planners
     nextPlayAt:null, nextTummyAt:null, nextBathAt:null, nextDoctorAt:null,
     // logs
     log:[], diaperLog:[], miscLog:[],
@@ -305,7 +386,7 @@ function ensureTimers(){
 }
 
 /* =========================
-   CHECKS (run ~2x/sec)
+   CHECKS (tick ~2x/sec)
 ========================= */
 function tick(){
   ['lyo','lya'].forEach(id=>{
@@ -319,36 +400,38 @@ function tick(){
   });
 }
 function checkFeeding(id){
-  if(model[id].isSick) return; // sick babies don’t get hungry
+  if(model[id].isSick) return;
   const n = model[id].nextFeedAt;
   if(!n){ scheduleNextFeed(id); return; }
   if(now() >= n && !model[id].needs.includes('Hungry')){
     model[id].needs.push('Hungry'); renderChild(id); saveState();
-    chimeHungry(); notify(`${cap(id)} is hungry`, 't-red');
+    chimeHungry(); notifyHungry(id);
   }
 }
 function checkWake(id){
   if(model[id].mood!=='sleeping' || !model[id].wakeAt) return;
   if(now() >= model[id].wakeAt){
     model[id].mood='calm'; model[id].wakeAt=null;
+
     if(chance(CONFIG.hungryOnWake) && !model[id].isSick && !model[id].needs.includes('Hungry')){
-      model[id].needs.push('Hungry'); chimeHungry(); notify(`${cap(id)} woke hungry`, 't-red');
+      model[id].needs.push('Hungry'); chimeHungry(); notifyHungry(id, `${cap(id)} woke up hungry`);
     }
-    if(chance(CONFIG.diaperOnWake)){ addDiaperNeed(id); notify(`${cap(id)} needs a diaper change`, 't-orange');}
-    // Sometimes wake fussy → needs soothing
-    if(chance(0.18)){ addSootheNeed(id, 'Rocking'); }
+    if(chance(CONFIG.diaperOnWake)){ addDiaperNeed(id); notifyDiaper(id); }
+
+    if(chance(0.18)){ addSootheNeed(id, 'Rocking'); } // fussy wake
+
     renderChild(id); saveState();
     logMisc(id, 'Wake', '');
   }
 }
 function checkDiaperNudge(id){
   if(!model[id].needs.includes('Diaper') || !model[id].diaperSince) return;
-  const elapsedMin = minute(now() - model[id].diaperSince);
+  const elapsedMin = (now() - model[id].diaperSince) / CONFIG.minuteMs();
   const threshold = CONFIG.diaperNudgeMin();
   const last = model[id].lastDiaperNudge || 0;
   if(elapsedMin >= threshold && (now()-last) >= msFromMin(threshold)){
     model[id].lastDiaperNudge = now(); saveState();
-    notify(`${cap(id)} still needs a diaper change`, 't-orange');
+    notifyDiaper(id, `${cap(id)} still needs a diaper change`);
     pulseRing(id, 'diaper');
   }
   const waitEl = document.getElementById(id+'-diaper-wait');
@@ -358,26 +441,24 @@ function checkDiaperNudge(id){
 function checkPlannedEvents(id){
   const t = now();
   if(model[id].nextPlayAt && t >= model[id].nextPlayAt){
-    logMisc(id, 'Playtime', 'Smiles & wiggles'); notify(`${cap(id)} wants to play`, 't-teal');
+    logMisc(id, 'Playtime', 'Smiles & wiggles'); toast(`${cap(id)} wants to play`, 't-teal');
     model[id].nextPlayAt = t + msFromMin(CONFIG.playEvery());
-    // small chance of peek-a-boo giggles
-    if(chance(0.2)){ logMisc(id, 'Giggles', 'Peek-a-boo!'); notify(`${cap(id)} giggles`, 't-blue'); }
+    if(chance(0.2)){ logMisc(id, 'Giggles', 'Peek-a-boo!'); toast(`${cap(id)} giggles`, 't-blue'); }
   }
   if(model[id].nextTummyAt && t >= model[id].nextTummyAt){
-    logMisc(id, 'Tummy Time', 'A few minutes'); notify(`${cap(id)} tummy time`, 't-blue');
+    logMisc(id, 'Tummy Time', 'A few minutes'); toast(`${cap(id)} tummy time`, 't-blue');
     model[id].nextTummyAt = t + msFromMin(CONFIG.tummyEvery());
   }
   if(model[id].nextBathAt && t >= model[id].nextBathAt){
-    logMisc(id, 'Bath', 'Splish splash'); notify(`${cap(id)} bath time`, 't-blue');
+    logMisc(id, 'Bath', 'Splish splash'); toast(`${cap(id)} bath time`, 't-blue');
     model[id].nextBathAt = t + msFromMin(CONFIG.bathEvery());
   }
   if(model[id].nextDoctorAt && t >= model[id].nextDoctorAt){
-    logMisc(id, 'Doctor Check-up', 'All good'); notify(`${cap(id)} doctor check-up (routine)`, 't-purple');
+    logMisc(id, 'Doctor Check-up', 'All good'); toast(`${cap(id)} doctor check-up (routine)`, 't-purple');
     model[id].nextDoctorAt = t + msFromMin(CONFIG.doctorRareEvery());
   }
 }
 function checkSickness(id){
-  // quick daily-ish pulse to maybe become sick
   if(!model[id]._nextSickPulse){ model[id]._nextSickPulse = now() + msFromMin(CONFIG.bathEvery()); }
   if(now() >= model[id]._nextSickPulse){
     model[id]._nextSickPulse = now() + msFromMin(CONFIG.bathEvery());
@@ -385,7 +466,6 @@ function checkSickness(id){
       setSick(id, true);
     }
   }
-  // auto resolve after duration
   if(model[id].isSick && model[id].sickUntil && now() >= model[id].sickUntil){
     setSick(id, false);
   }
@@ -400,18 +480,22 @@ function fallbackOverdue(id){
    NEED HELPERS
 ========================= */
 function addDiaperNeed(id){ if(!model[id].needs.includes('Diaper')){ model[id].needs.push('Diaper'); if(!model[id].diaperSince) model[id].diaperSince = now(); } }
-function addSootheNeed(id, how='Rocking'){ if(!model[id].needs.includes('Soothe')){ model[id].needs.push('Soothe'); model[id]._sootheHow = how; notify(`${cap(id)} needs ${how.toLowerCase()}`, 't-blue'); pulseRing(id, 'soothe'); } }
+function addSootheNeed(id, how='Rocking'){
+  if(!model[id].needs.includes('Soothe')){
+    model[id].needs.push('Soothe'); model[id]._sootheHow = how;
+    notifySoothe(id, how); pulseRing(id, 'soothe');
+  }
+}
 function setSick(id, on){
   if(on){
     model[id].isSick = true; model[id].sickUntil = now() + msFromMin(CONFIG.sicknessDurationMin());
     if(!model[id].needs.includes('Sick')) model[id].needs.push('Sick');
-    // cancel hungry while sick
     const h = model[id].needs.indexOf('Hungry'); if(h>-1) model[id].needs.splice(h,1);
-    notify(`${cap(id)} isn’t feeling well`, 't-purple'); pulseRing(id, 'sick'); logMisc(id,'Sick','Started');
+    notifySick(id); pulseRing(id, 'sick'); logMisc(id,'Sick','Started');
   }else{
     model[id].isSick = false; model[id].sickUntil = null;
     const k = model[id].needs.indexOf('Sick'); if(k>-1) model[id].needs.splice(k,1);
-    notify(`${cap(id)} is feeling better`, 't-teal'); logMisc(id,'Sick','Resolved');
+    toast(`${cap(id)} is feeling better`, 't-teal'); logMisc(id,'Sick','Resolved');
   }
   renderChild(id); saveState();
 }
@@ -423,7 +507,7 @@ function pulseRing(id,type){
    ACTIONS / RESOLVES
 ========================= */
 function feedBaby(id){
-  if(model[id].isSick){ notify(`${cap(id)} is sick — hold feeding for now`, 't-purple'); return; }
+  if(model[id].isSick){ notifySick(id, `${cap(id)} is sick — hold feeding for now`); return; }
   const wasHungry = model[id].needs.includes('Hungry');
   const idx = model[id].needs.indexOf('Hungry'); if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
@@ -437,19 +521,18 @@ function feedBaby(id){
   model[id].log.unshift(entry); if(model[id].log.length>30) model[id].log.length=30;
   model[id].lastFedAt = tNow;
 
-  // spit-up
-  if(chance(CONFIG.spitupChance)){ logMisc(id,'Spit-up','Small burp'); notify(`${cap(id)} spit-up a little`, 't-orange'); }
+  if(chance(CONFIG.spitupChance)){ logMisc(id,'Spit-up','Small burp'); toast(`${cap(id)} spit-up a little`, 't-orange'); }
 
   if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); model[id].overdueTimer=null; model[id].overdueScheduledAt=null; }
   scheduleNextFeed(id); renderChild(id); saveState();
-  if(wasHungry) chimeFed(); notify(`Fed ${cap(id)}`,'t-teal');
+  if(wasHungry) chimeFed(); toast(`Fed ${cap(id)}`,'t-teal');
 }
 function changeDiaper(id){
   const idx = model[id].needs.indexOf('Diaper'); if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
   model[id].diaperLog.unshift({ ts:now(), note:'Changed' }); if(model[id].diaperLog.length>30) model[id].diaperLog.length=30;
   model[id].diaperSince=null; model[id].lastDiaperNudge=null;
-  renderChild(id); saveState(); notify(`${cap(id)} is fresh & comfy`,'t-teal');
+  renderChild(id); saveState(); toast(`${cap(id)} is fresh & comfy`,'t-teal');
   const waitEl=document.getElementById(id+'-diaper-wait'); if(waitEl) waitEl.textContent='';
 }
 function sootheBaby(id){
@@ -468,7 +551,7 @@ function clearHungryNoFeed(id){
 function runOverdueCheck(id){
   const since = model[id].overdueScheduledAt; if(!since) return;
   if(!model[id].lastFedAt || model[id].lastFedAt < since){
-    notify(`${cap(id)} might still be hungry — want to double check?`,'t-red'); chimeOverdue();
+    notifyHungry(id, `${cap(id)} might still be hungry — want to double check?`);
     if(!model[id].isSick && !model[id].needs.includes('Hungry')){ model[id].needs.push('Hungry'); renderChild(id); pulseRing(id,'hungry'); }
   }
   model[id].overdueTimer=null; model[id].overdueScheduledAt=null; saveState();
@@ -527,10 +610,7 @@ function renderChild(id){
     const s=document.createElement('button'); s.className='pill resolve soothe'; s.textContent=model[id]._sootheHow||'Soothe'; s.onclick=()=>{ const rings=[...g.querySelectorAll('.ring')]; const blue=rings.find(r=>r.style.stroke===COLOR.soothe); if(blue){ blue.classList.add('cooldown'); setTimeout(()=>sootheBaby(id),900);}else sootheBaby(id); }; controls.appendChild(s);
   }
   if(needs.includes('Sick')){
-    const s=document.createElement('button'); s.className='pill resolve sick'; s.textContent='Care Pack'; s.onclick=()=>{ // shorten remaining sickness a bit
-      if(model[id].sickUntil){ model[id].sickUntil = Math.min(model[id].sickUntil, now()+msFromMin(CONFIG.sicknessDurationMin()/3)); }
-      toast(`${cap(id)} is resting — care applied`,'t-purple');
-    }; controls.appendChild(s);
+    const s=document.createElement('button'); s.className='pill resolve sick'; s.textContent='Care Pack'; s.onclick=()=>{ if(model[id].sickUntil){ model[id].sickUntil = Math.min(model[id].sickUntil, now()+msFromMin(CONFIG.sicknessDurationMin()/3)); saveState(); toast(`${cap(id)} is resting — care applied`,'t-purple'); } }; controls.appendChild(s);
   }
 
   const moodRow=$(id+'-mood'); moodRow.innerHTML='';
@@ -540,9 +620,10 @@ function renderChild(id){
 
   renderLogs(id); updateCountdown(id);
   const waitEl=document.getElementById(id+'-diaper-wait');
-  if(model[id].needs.includes('Diaper') && model[id].diaperSince){ const mins=Math.floor(minute(now()-model[id].diaperSince)); waitEl.textContent=`Diaper waiting: ${mins}m`; } else { waitEl.textContent=''; }
+  if(model[id].needs.includes('Diaper') && model[id].diaperSince){ const mins=Math.floor((now()-model[id].diaperSince)/CONFIG.minuteMs()); waitEl.textContent=`Diaper waiting: ${mins}m`; } else { waitEl.textContent=''; }
   renderStreakPanel();
 }
+
 function renderLogs(id){
   const feedWrap=$(id+'-log').querySelector('.entries.feed'); feedWrap.innerHTML='';
   const feeds=model[id].log||[]; if(feeds.length===0){ feedWrap.innerHTML=`<div class="entry"><span class="ts">No feedings yet.</span><span></span></div>`; } else {
@@ -586,8 +667,16 @@ modeSwitch.checked = CONFIG.demo;
 modeSwitch.addEventListener('change', ()=>{
   CONFIG.demo = modeSwitch.checked;
   hintSpeed.textContent = CONFIG.demo ? '1 min = 1 sec' : 'Real minutes';
-  // Recompute timers sensibly from now
-  ['lyo','lya'].forEach(id=>{ scheduleNextFeed(id); const SR=CONFIG.sleepRandom(); if(model[id].mood==='sleeping') model[id].wakeAt = now() + msFromMin(randInt(SR.min,SR.max)); });
+  ['lyo','lya'].forEach(id=>{
+    scheduleNextFeed(id);
+    const SR=CONFIG.sleepRandom();
+    if(model[id].mood==='sleeping') model[id].wakeAt = now() + msFromMin(randInt(SR.min,SR.max));
+    // reschedule planners from now
+    model[id].nextPlayAt  = now() + msFromMin(CONFIG.playEvery());
+    model[id].nextTummyAt = now() + msFromMin(CONFIG.tummyEvery());
+    model[id].nextBathAt  = now() + msFromMin(CONFIG.bathEvery());
+    model[id].nextDoctorAt= now() + msFromMin(CONFIG.doctorRareEvery());
+  });
   saveState(); renderChild('lyo'); renderChild('lya');
 });
 
@@ -605,18 +694,7 @@ init();
    STORAGE SYNC
 ========================= */
 window.addEventListener('storage',(ev)=>{ if(ev.key===STORAGE_KEY || ev.key===STORAGE_KEY+'.pulse'){ loadState(); renderChild('lyo'); renderChild('lya'); }});
-
-/* =========================
-   OVERDUE FALLBACK
-========================= */
-function runOverdueCheck(id){ // (defined above too)
-  const since = model[id].overdueScheduledAt; if(!since) return;
-  if(!model[id].lastFedAt || model[id].lastFedAt < since){
-    notify(`${cap(id)} might still be hungry — want to double check?`,'t-red'); chimeOverdue();
-    if(!model[id].isSick && !model[id].needs.includes('Hungry')){ model[id].needs.push('Hungry'); renderChild(id); pulseRing(id,'hungry'); }
-  }
-  model[id].overdueTimer=null; model[id].overdueScheduledAt=null; saveState();
-}
 </script>
 </body>
 </html>
+
