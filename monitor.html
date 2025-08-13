@@ -1,143 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Lyo & Lya Monitors</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lyo & Lya — Side-by-Side Monitor</title>
 <style>
-  body {
-    background: #111;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    padding: 40px;
+  :root{
+    --bg:#0f0f10;
+    --card:#1a1b1d;
+    --text:#f7f7f7;
+    --muted:#9aa3ad;
   }
-  .monitor {
-    text-align: center;
-    position: relative;
-    width: 250px;
-    height: 300px;
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center; gap:28px; padding:28px;
   }
-  .ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    pointer-events: none;
-    transform: rotate(-90deg);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  h1{margin:0 0 8px 0; font-weight:800; letter-spacing:.4px}
+  .row{
+    display:flex; gap:40px; flex-wrap:wrap; justify-content:center; width:100%;
   }
-  .cooldown {
-    animation: cooldownAnim 1s forwards;
+  .monitor{
+    width:360px; max-width:94vw; background:var(--card);
+    border-radius:22px; padding:22px 22px 16px; box-shadow:0 10px 30px rgba(0,0,0,.35);
   }
-  @keyframes cooldownAnim {
-    from { transform: rotate(-90deg) scale(1); opacity: 1; }
-    to { transform: rotate(-90deg) scale(0.5); opacity: 0; }
+  .name{font-size:22px; font-weight:800; text-align:center; margin-bottom:10px}
+  .stage{
+    position:relative; width:280px; height:280px; margin:0 auto 10px;
+    display:grid; place-items:center;
   }
-  svg {
-    position: absolute;
-    top: 0;
-    left: 0;
+  .avatar{
+    width:170px; height:170px; border-radius:50%;
+    background:#111 center/cover no-repeat; position:relative; z-index:3;
+    box-shadow:0 10px 24px rgba(0,0,0,.35) inset, 0 0 0 1px rgba(255,255,255,.04);
   }
-  .state-label {
-    fill: white;
-    font-size: 16px;
-    letter-spacing: 1px;
+  /* ring + label live inside an SVG */
+  svg.halo{
+    position:absolute; inset:0; z-index:2; overflow:visible;
   }
-  .avatar {
-    position: relative;
-    z-index: 1;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: #333;
-    margin: 50px auto 0;
-    background-size: cover;
-    background-position: center;
+  .ring{
+    fill:none; /* visible stroke is the halo */
+    stroke-width:12;
+    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 22px currentColor);
+    opacity:1; transform-origin:140px 140px;
+    transition: opacity .2s ease;
   }
-  .resolve-btn {
-    margin-top: 20px;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 20px;
-    font-size: 14px;
-    color: white;
-    cursor: pointer;
-    display: none;
+  .ring.cooldown{ animation:cooldown .9s ease forwards }
+  @keyframes cooldown{
+    to{ opacity:0; transform:scale(.88) }
   }
+  .label{
+    font-size:15px; letter-spacing:.6px; fill:#fff; text-shadow:0 1px 1px rgba(0,0,0,.6);
+  }
+  .labelPath{ /* keep single centered label */
+    dominant-baseline:middle;
+  }
+  .controls{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:12px }
+  .resolve{
+    display:none; border:0; padding:10px 14px; color:#fff; font-weight:700;
+    border-radius:999px; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.35);
+    transition:transform .06s ease, filter .2s ease;
+  }
+  .resolve:active{ transform:translateY(1px) }
+  .hint{ text-align:center; color:var(--muted); font-size:12.5px; margin-top:8px }
 </style>
 </head>
 <body>
 
-<div class="monitor" id="lyo-monitor">
-  <div class="avatar" style="background-image: url('Lyo_Glyph_Clear.png');"></div>
-  <svg width="250" height="250">
-    <defs>
-      <path id="lyoPath" d="M 125,125 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"/>
-    </defs>
-    <circle id="lyoRing" class="ring" cx="125" cy="125" r="100" stroke-width="10" fill="none"/>
-    <text class="state-label">
-      <textPath id="lyoLabel" xlink:href="#lyoPath" startOffset="50%" text-anchor="middle"></textPath>
-    </text>
-  </svg>
-  <button id="lyoResolve" class="resolve-btn">Resolve</button>
-</div>
+<h1>Timecove Monitor: Lyo & Lya</h1>
 
-<div class="monitor" id="lya-monitor">
-  <div class="avatar" style="background-image: url('Lya_Glyph_Clear.png');"></div>
-  <svg width="250" height="250">
-    <defs>
-      <path id="lyaPath" d="M 125,125 m -100,0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"/>
-    </defs>
-    <circle id="lyaRing" class="ring" cx="125" cy="125" r="100" stroke-width="10" fill="none"/>
-    <text class="state-label">
-      <textPath id="lyaLabel" xlink:href="#lyaPath" startOffset="50%" text-anchor="middle"></textPath>
-    </text>
-  </svg>
-  <button id="lyaResolve" class="resolve-btn">Resolve</button>
+<div class="row">
+
+  <!-- LYO -->
+  <section class="monitor" id="lyo-card">
+    <div class="name">Lyo</div>
+    <div class="stage">
+      <svg class="halo" viewBox="0 0 280 280" aria-hidden="true">
+        <!-- circular path used for curved labels -->
+        <defs>
+          <path id="lyo-path" d="M140,140 m-110,0 a110,110 0 1,1 220,0 a110,110 0 1,1 -220,0"/>
+        </defs>
+        <!-- rings get injected here -->
+        <g id="lyo-rings"></g>
+        <!-- labels get injected here -->
+        <g id="lyo-labels"></g>
+      </svg>
+      <div class="avatar" id="lyo-avatar"
+           style="background-image:url('Lyo_Glyph_Clear.png');"></div>
+    </div>
+    <div class="controls" id="lyo-controls"></div>
+    <div class="hint">Tap a colored button to resolve the need.</div>
+  </section>
+
+  <!-- LYA -->
+  <section class="monitor" id="lya-card">
+    <div class="name">Lya</div>
+    <div class="stage">
+      <svg class="halo" viewBox="0 0 280 280" aria-hidden="true">
+        <defs>
+          <path id="lya-path" d="M140,140 m-110,0 a110,110 0 1,1 220,0 a110,110 0 1,1 -220,0"/>
+        </defs>
+        <g id="lya-rings"></g>
+        <g id="lya-labels"></g>
+      </svg>
+      <div class="avatar" id="lya-avatar"
+           style="background-image:url('Lya_Glyph_Clear.png');"></div>
+    </div>
+    <div class="controls" id="lya-controls"></div>
+    <div class="hint">Needs persist until you resolve them.</div>
+  </section>
+
 </div>
 
 <script>
-const states = {
-  Hungry: '#ff4444',
-  Tired: '#ffaa00',
-  Sick: '#44ff44',
-  Play: '#4488ff'
+/* ---------- palette & state config ---------- */
+const COLORS = {
+  Hungry:  "#ff4d4d",  // red
+  Tired:   "#ffb020",  // amber
+  Sick:    "#7fff3c",  // puke green
+  Play:    "#4d7dff"   // blue-violet
 };
 
-function setState(monitorId, ringId, labelId, btnId) {
-  const stateKeys = Object.keys(states);
-  const randomState = stateKeys[Math.floor(Math.random() * stateKeys.length)];
-  const ring = document.getElementById(ringId);
-  const label = document.getElementById(labelId);
-  const btn = document.getElementById(btnId);
+// initial needs appear immediately on load and persist until resolved
+const model = {
+  lyo:  ["Tired", "Play"],     // demonstrate multiple concentric rings
+  lya:  ["Hungry"]             // single need
+};
 
-  ring.style.stroke = states[randomState];
-  ring.style.opacity = 1;
-  label.textContent = randomState;
-  btn.textContent = `Resolve ${randomState}`;
-  btn.style.backgroundColor = states[randomState];
-  btn.style.display = 'inline-block';
-
-  btn.onclick = () => {
-    ring.classList.add('cooldown');
-    setTimeout(() => {
-      ring.classList.remove('cooldown');
-      ring.style.opacity = 0;
-      btn.style.display = 'none';
-    }, 1000);
-  };
+/* ---------- helpers ---------- */
+function el(tag, attrs={}){
+  const n=document.createElementNS(
+    tag==='text' || tag==='tspan' || tag==='path' || tag==='circle' || tag==='g'
+      ? 'http://www.w3.org/2000/svg'
+      : 'http://www.w3.org/1999/xhtml'
+  , tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='text') n.textContent=v;
+    else if(tag==='text' || tag==='tspan' || tag==='path' || tag==='circle' || tag==='g')
+      n.setAttribute(k,v);
+    else n[k]=v;
+  });
+  return n;
 }
 
-// Simulate needs appearing
-setInterval(() => setState('lyo-monitor', 'lyoRing', 'lyoLabel', 'lyoResolve'), 5000);
-setInterval(() => setState('lya-monitor', 'lyaRing', 'lyaLabel', 'lyaResolve'), 7000);
-</script>
+/* ---------- render a child's needs as concentric rings + curved labels ---------- */
+function renderChild(id){
+  const needs = model[id];
+  const ringsG = document.getElementById(`${id}-rings`);
+  const labelsG = document.getElementById(`${id}-labels`);
+  const controls = document.getElementById(`${id}-controls`);
+  const pathId = `${id}-path`;
 
+  ringsG.innerHTML = "";
+  labelsG.innerHTML = "";
+  controls.innerHTML = "";
+
+  if(!needs || needs.length===0) return;
+
+  // draw inner -> outer
+  needs.forEach((need, i)=>{
+    const color = COLORS[need] || "#999";
+    const r = 110 - i*16; // radius shrinks for inner rings
+    // ring
+    const ring = el('circle', { cx:140, cy:140, r, class:'ring', style:`color:${color}; stroke:${color}` });
+    ringsG.appendChild(ring);
+
+    // curved label (one per ring, centered at top)
+    const text = el('text', { class:'label' });
+    const textPath = el('textPath', {
+      href:`#${pathId}`, startOffset:"50%", textAnchor:"middle", class:"labelPath"
+    });
+    textPath.textContent = need;
+    text.appendChild(textPath);
+    labelsG.appendChild(text);
+
+    // resolve button (one per active need), color-coded
+    const btn = document.createElement('button');
+    btn.className = 'resolve';
+    btn.style.display = 'inline-block';
+    btn.style.backgroundColor = color;
+    btn.textContent = `Resolve ${need}`;
+    btn.addEventListener('click', ()=>{
+      // cooldown on this ring + remove once finished
+      ring.classList.add('cooldown');
+      // remove the label simultaneously
+      text.style.opacity = '0';
+      setTimeout(()=>{
+        // remove this need from the model
+        const idx = model[id].indexOf(need);
+        if(idx>-1) model[id].splice(idx,1);
+        renderChild(id);
+      }, 900);
+    });
+    controls.appendChild(btn);
+  });
+}
+
+/* ---------- initial render (needs show immediately) ---------- */
+renderChild('lyo');
+renderChild('lya');
+
+/* ---------- HOW TO INTEGRATE A LIVE/VIRTUAL FEED ----------
+   1) Replace entries in model.lyo / model.lya with whatever states you want:
+        model.lyo = ['Hungry','Sick'];
+        model.lya = [];
+      then call renderChild('lyo') / renderChild('lya').
+   2) If you store states in JSON, fetch it and set model.* accordingly.
+-------------------------------------------------------------- */
+</script>
 </body>
 </html>
+
 
