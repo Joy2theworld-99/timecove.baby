@@ -97,7 +97,9 @@
     <!-- Lya -->
     <div class="monitor" id="lya-monitor">
       <h2>Lya</h2>
-      <img id="Lya_Glyph_Clear.png" class="glyph" src="Lya_Glyph_Clear.png" alt="Lya Glyph" />
+      <div id="lya-glow-wrapper" class="glow-wrapper">
+  <img id="Lya_Glyph_Clear.png" class="glyph" src="Lya_Glyph_Clear.png" alt="Lya Glyph" />
+</div>
       <div class="buttons">
         <button class="calm" onclick="setLyaState('calm')">Calm</button>
         <button class="alert" onclick="setLyaState('alert')">Alert</button>
@@ -130,9 +132,16 @@
   wrapper.style.boxShadow = glowStyles[state];
 }
 
-    function setLyaState(state) {
-      lyaGlyph.style.boxShadow = glowStyles[state];
-    }
+   function setLyaState(state) {
+  const wrapper = document.getElementById('lya-glow-wrapper');
+  const glowStyles = {
+    calm: '0 0 20px #4db6ac',
+    alert: '0 0 25px #f44336',
+    dreaming: '0 0 25px #9575cd',
+    sleeping: '0 0 15px #90a4ae'
+  };
+  wrapper.style.boxShadow = glowStyles[state];
+}
   </script>
 </body>
 </html>
