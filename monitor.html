@@ -1,267 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Timecove Monitor: Lyo & Lya</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feeding Monitor</title>
   <style>
-   :root{
-    --bg:#111; --panel:#1a1a1a; --ink:#fff; --muted:#aaa;
-    --calm:#3fbfbb; --alert:#f44336; --dream:#6a1b9a; --sleep:#37474f;
-  }
-  html,body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin:0}
-  h1{font-size:clamp(1.6rem,5vw,2.6rem);text-align:center;margin:24px 0}
-  .wrap{display:flex;flex-direction:column;gap:24px;padding:16px;max-width:1200px;margin:0 auto}
-  @media(min-width:900px){.wrap{flex-direction:row;justify-content:center}}
-  .panel{background:var(--panel);border-radius:18px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.4);flex:1;max-width:520px;margin:0 auto}
-  .name{font-weight:800;font-size:clamp(1.4rem,3vw,1.8rem);text-align:center;margin:0 0 8px}
-  .auraBox{display:grid;place-items:center;margin:10px 0 16px}
-  .aura{width:180px;aspect-ratio:1/1;border-radius:999px;display:grid;place-items:center;transition:box-shadow .6s ease, transform .6s ease}
-  .aura img{width:92px;height:auto;display:block}
-  .states{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0 14px}
-  .states button{border:0;border-radius:10px;padding:10px 14px;color:#fff;font-weight:700;cursor:pointer}
-  .states .calm{background:var(--calm)} .states .alert{background:var(--alert)}
-  .states .dream{background:var(--dream)} .states .sleep{background:var(--sleep)}
-  .feed{display:grid;gap:6px;justify-items:center;margin:10px 0 12px}
-  .feed button{border:2px solid #fff;background:#fff;color:#000;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
-  .feed button[disabled]{background:#cfcfcf;color:#555;border-color:#8a8a8a;cursor:not-allowed}
-  .cool{font-size:.92rem;color:#ccc;min-height:1.2em}
-  .log{background:#202020;border-radius:12px;padding:12px 12px;color:var(--muted);font-size:.95rem;max-height:130px;overflow:auto}
-  .log .item{padding:6px 6px;border-radius:8px}
-  .log .item + .item{margin-top:6px}
-  .muted{color:#9aa}
-  .divider{height:1px;background:#2b2b2b;margin:12px 0}
-</style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f8ff;
+      padding: 2rem;
+    }
+
+    .baby-card {
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      max-width: 400px;
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .aura {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: url('babyface.png') center/cover no-repeat; /* Replace with actual face */
+      box-shadow: 0 0 40px 20px transparent;
+      transition: box-shadow 0.3s;
+    }
+
+    .name {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    .feed-btn {
+      font-size: 1rem;
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      background: #5f9ea0;
+      color: white;
+      cursor: pointer;
+    }
+
+    .feed-btn:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .timer {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>Timecove Monitor: Lyo & Lya</h1>
-
-  <div class="wrap">
-    <!-- Lyo -->
-    <section class="panel" data-id="lyo">
-      <h2 class="name">Lyo</h2>
-      <div class="auraBox">
-        <div class="aura" id="aura-lyo"><img src="Lyo_Glyph_Clear.png" alt="Lyo"></div>
-      </div>
-
-      <div class="states">
-        <button class="calm"  data-state="calm">Calm</button>
-        <button class="alert" data-state="alert">Alert</button>
-        <button class="dream" data-state="dreaming">Dreaming</button>
-        <button class="sleep" data-state="sleeping">Sleeping</button>
-      </div>
-
-      <div class="feed">
-        <button id="feed-lyo">Feed Lyo (Dreammilk)</button>
-        <div class="cool" id="cool-lyo"></div>
-      </div>
-
-      <div class="log" id="log-lyo"></div>
-    </section>
-
-    <!-- Lya -->
-    <section class="panel" data-id="lya">
-      <h2 class="name">Lya</h2>
-      <div class="auraBox">
-        <div class="aura" id="aura-lya"><img src="Lya_Glyph_Clear.png" alt="Lya"></div>
-      </div>
-
-      <div class="states">
-        <button class="calm"  data-state="calm">Calm</button>
-        <button class="alert" data-state="alert">Alert</button>
-        <button class="dream" data-state="dreaming">Dreaming</button>
-        <button class="sleep" data-state="sleeping">Sleeping</button>
-      </div>
-
-      <div class="feed">
-        <button id="feed-lya">Feed Lya (Dreammilk)</button>
-        <div class="cool" id="cool-lya"></div>
-      </div>
-
-      <div class="log" id="log-lya"></div>
-    </section>
+  <div class="baby-card" id="Lyo">
+    <div class="aura" id="aura-Lyo"></div>
+    <div class="name">Lyo</div>
+    <button class="feed-btn" id="feed-Lyo" onclick="feedBaby('Lyo')">Feed Me!</button>
+    <div class="timer" id="timer-Lyo">Next feed in: 0h 0m</div>
   </div>
 
-<script>
-/* ------------------ CONFIG ------------------ */
-const TICK_MS = 30_000;              // 30s real = 1 sim hour (for hunger growth)
-const HUNGER_PER_TICK = 8;           // 0-100 scale
-const HUNGER_THRESHOLDS = { alert:40, fussy:70, crying:90 };
-const COOLDOWNS_HOURS = { EchoSip:3, Starbottle:4, Dreammilk:6 };
-const FEED_SEQUENCE = ["EchoSip","Starbottle","Dreammilk"]; // rotates by sim time
+  <div class="baby-card" id="Lya">
+    <div class="aura" id="aura-Lya"></div>
+    <div class="name">Lya</div>
+    <button class="feed-btn" id="feed-Lya" onclick="feedBaby('Lya')">Feed Me!</button>
+    <div class="timer" id="timer-Lya">Next feed in: 0h 0m</div>
+  </div>
 
-/* ------------ STATE / PERSISTENCE ----------- */
-const KEY = "timecove.monitor.v2";
-const now = () => Date.now();
+  <script>
+    const FEED_INTERVAL_HOURS = 3;
+    const babies = ['Lyo', 'Lya'];
 
-function defaultTwin(name){
-  return {
-    name, hunger: 10, state: "calm",
-    lastFeedType: null,
-    lastFeedAt: 0,
-    cooldownUntil: 0,
-    log: []
-  };
-}
-
-function loadState(){
-  try{
-    const raw = localStorage.getItem(KEY);
-    if(!raw) return { simHour: 6, twins:{ lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") } };
-    const parsed = JSON.parse(raw);
-    // ensure shape
-    parsed.twins ??= { lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") };
-    return parsed;
-  }catch(e){
-    return { simHour: 6, twins:{ lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") } };
-  }
-}
-function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
-
-let state = loadState();
-
-/* ----------------- UTILITIES ---------------- */
-function fmtTime(ts){
-  return new Date(ts).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', second:'2-digit'});
-}
-function setAuraColor(id, color){
-  const el = document.getElementById(`aura-${id}`);
-  el.style.boxShadow = `0 0 44px ${color}`;
-}
-
-/* -------------- UI BINDINGS ----------------- */
-function renderTwin(id){
-  const twin = state.twins[id];
-
-  // aura auto from hunger/state
-  const hunger = twin.hunger;
-  let color = "rgba(63,191,187,.55)";   // calm
-  if(hunger >= HUNGER_THRESHOLDS.alert) color = "rgba(255,193,7,.55)";  // yellow
-  if(hunger >= HUNGER_THRESHOLDS.fussy) color = "rgba(255,152,0,.6)";   // orange
-  if(hunger >= HUNGER_THRESHOLDS.crying) color = "rgba(244,67,54,.65)"; // red
-  if(twin.state === "dreaming") color = "rgba(106,27,154,.6)";
-  if(twin.state === "sleeping") color = "rgba(55,71,79,.55)";
-  setAuraColor(id, color);
-
-  // feed button enable/disabled + label
-  const feedBtn = document.getElementById(`feed-${id}`);
-  const coolEl  = document.getElementById(`cool-${id}`);
-
-  const remaining = twin.cooldownUntil - now();
-  if(remaining > 0){
-    feedBtn.disabled = true;
-    const hrs = Math.floor(remaining/3_600_000);
-    const mins = Math.floor((remaining%3_600_000)/60_000);
-    coolEl.textContent = `Next feeding in ${hrs}h ${String(mins).padStart(2,'0')}m`;
-  }else{
-    feedBtn.disabled = false;
-    coolEl.textContent = "";
-  }
-
-  // update feed button label by current sequence (time-based)
-  const type = feedTypeForHour(state.simHour);
-  feedBtn.textContent = `Feed ${twin.name} (${type})`;
-
-  // render log
-  const logEl = document.getElementById(`log-${id}`);
-  if(!twin.log.length){
-    logEl.innerHTML = `<div class="item muted">No recent feedings.</div>`;
-  }else{
-    logEl.innerHTML = twin.log.slice(-8).reverse().map(
-      e => `<div class="item">${e.time} — ${e.text}</div>`
-    ).join("");
-  }
-}
-
-function renderAll(){ renderTwin("lyo"); renderTwin("lya"); saveState(); }
-
-/* --------------- LOGIC / TICK --------------- */
-function feedTypeForHour(simHour){
-  if(simHour >= 6 && simHour < 18) return FEED_SEQUENCE[0];        // Echo Sip
-  if(simHour >= 18 && simHour < 22) return FEED_SEQUENCE[1];       // Starbottle
-  return FEED_SEQUENCE[2];                                          // Dreammilk
-}
-
-function feed(id){
-  const twin = state.twins[id];
-  const type = feedTypeForHour(state.simHour);
-  const hours = COOLDOWNS_HOURS[type];
-
-  // cooldown guard
-  if(twin.cooldownUntil > now()) return;
-
-  // apply effects
-  twin.hunger = Math.max(0, twin.hunger - 60);  // big relief
-  twin.state  = "calm";
-  twin.lastFeedType = type;
-  twin.lastFeedAt = now();
-  twin.cooldownUntil = now() + hours*60*60*1000;
-
-  twin.log.push({ time: fmtTime(twin.lastFeedAt), text: `Fed with ${type}` });
-  if(twin.log.length > 50) twin.log.shift(); // keep it light
-
-  renderTwin(id);
-}
-
-function manualState(id, newState){
-  const twin = state.twins[id];
-  twin.state = newState;
-  // manual state doesn't override hunger-driven alert if really high
-  renderTwin(id);
-}
-
-function tick(){
-  // time advances; hunger grows
-  state.simHour = (state.simHour + 1) % 24;          // +1 sim hour per tick
-  for(const id of ["lyo","lya"]){
-    const t = state.twins[id];
-    t.hunger = Math.min(100, t.hunger + HUNGER_PER_TICK);
-
-    // map hunger --> auto state if not sleeping/dreaming
-    if(t.state !== "sleeping" && t.state !== "dreaming"){
-      if(t.hunger >= HUNGER_THRESHOLDS.crying)       t.state = "crying";
-      else if(t.hunger >= HUNGER_THRESHOLDS.fussy)   t.state = "fussy";
-      else if(t.hunger >= HUNGER_THRESHOLDS.alert)   t.state = "alert";
-      else                                           t.state = "calm";
+    function getNextFeedTime(babyId) {
+      return localStorage.getItem(`${babyId}-nextFeed`) || 0;
     }
-  }
 
-  // run event engine hooks (extensible)
-  runEvents();
-
-  renderAll();
-}
-
-/* ---------- EXTENSIBLE EVENT ENGINE ---------- */
-// register simple event rules; each checked every tick
-const EventRegistry = [];
-function registerEvent(rule){ EventRegistry.push(rule); }
-function runEvents(){ EventRegistry.forEach(rule => rule(state)); }
-
-// Example: gentle drowse after Dreammilk (future-ready placeholder)
-registerEvent((state)=>{
-  for(const id of ["lyo","lya"]){
-    const t = state.twins[id];
-    if(t.lastFeedType === "Dreammilk" && now()-t.lastFeedAt > 15*60*1000 && t.state!=="sleeping"){
-      // after 15 real mins, nudge toward sleeping if hunger low
-      if(t.hunger < 40){ t.state = "sleeping"; }
+    function setNextFeedTime(babyId) {
+      const nextTime = Date.now() + FEED_INTERVAL_HOURS * 60 * 60 * 1000;
+      localStorage.setItem(`${babyId}-nextFeed`, nextTime);
     }
-  }
-});
 
-/* --------------- WIRE UP UI ------------------ */
-for(const id of ["lyo","lya"]){
-  document.getElementById(`feed-${id}`).addEventListener("click", ()=>feed(id));
-  const panel = document.querySelector(`.panel[data-id="${id}"]`);
-  panel.querySelectorAll(".states button").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      manualState(id, btn.dataset.state);
-    });
-  });
-}
+    function updateState(babyId) {
+      const now = Date.now();
+      const nextFeed = parseInt(getNextFeedTime(babyId));
+      const feedBtn = document.getElementById(`feed-${babyId}`);
+      const timer = document.getElementById(`timer-${babyId}`);
+      const aura = document.getElementById(`aura-${babyId}`);
+      const timeLeft = nextFeed - now;
 
-renderAll();                      // first paint
-setInterval(tick, TICK_MS);       // start the world
-</script>
+      if (timeLeft <= 0) {
+        feedBtn.disabled = false;
+        feedBtn.textContent = "Feed Me!";
+        aura.style.boxShadow = "0 0 60px 30px #FF000066"; // Alert Red
+        timer.textContent = "Ready to feed";
+      } else {
+        feedBtn.disabled = true;
+        feedBtn.textContent = "Fed";
+        aura.style.boxShadow = "0 0 60px 30px #00FFFF66"; // Calm Cyan
+        const mins = Math.floor(timeLeft / 60000) % 60;
+        const hrs = Math.floor(timeLeft / 3600000);
+        timer.textContent = `Next feed in: ${hrs}h ${mins}m`;
+      }
+    }
+
+    function feedBaby(babyId) {
+      setNextFeedTime(babyId);
+      updateState(babyId);
+    }
+
+    function tick() {
+      babies.forEach(updateState);
+    }
+
+    window.onload = () => {
+      tick();
+      setInterval(tick, 60000); // Check every minute
+    }
+  </script>
 </body>
 </html>
