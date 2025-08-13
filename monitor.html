@@ -3,145 +3,159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Feeding Monitor</title>
+  <title>Twin Monitor</title>
   <style>
     body {
-      margin: 0;
-      background-color: #000; /* black background */
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      padding: 40px 20px;
+      background-color: black;
       color: white;
-    }
-
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 40px;
-      width: 100%;
-      max-width: 1000px;
-    }
-
-    .card {
-      background: #111;
-      border-radius: 20px;
-      padding: 30px;
-      width: 300px;
-      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      font-family: Arial, sans-serif;
       text-align: center;
+      padding: 1rem;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+    }
+
+    .twins-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .twin {
       position: relative;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 200px;
+      background-color: #111;
     }
 
     .aura {
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 10px;
+      position: absolute;
+      top: -10px; left: -10px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
-      background-color: #999;
-      box-shadow: 0 0 60px 30px #999;
-      transition: background-color 0.4s, box-shadow 0.4s;
+      z-index: 1;
     }
 
-    .name {
-      font-size: 1.4rem;
-      font-weight: bold;
-      margin: 10px 0 10px;
+    .puke-green {
+      background-color: #99991D;
+      animation: pulse 1s infinite;
+      opacity: 0.75;
     }
 
-    button {
-      background-color: #32928f;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-
-    button:disabled {
-      background-color: gray;
-      cursor: default;
-    }
-
-    .feed-time {
-      font-size: 0.9rem;
-      color: #ccc;
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.75; }
     }
 
     .glyph {
-      width: 60px;
-      height: auto;
-      margin: 10px auto;
+      position: relative;
+      z-index: 2;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+    }
+
+    .status-text {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    button {
+      margin: 0.5rem;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .disabled {
+      background-color: #444;
+      color: #999;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card" id="card-lyo">
-      <div class="aura" id="aura-lyo"></div>
-      <img class="glyph" id="glyph-lyo" src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" />
-      <div class="name">Lyo</div>
-      <button id="feed-btn-lyo">Feed Me!</button>
-      <div class="feed-time" id="next-feed-lyo"></div>
+  <h1>Twins' Real-Time Monitor</h1>
+  <div class="twins-container">
+    <div class="twin" id="lyo">
+      <div class="aura" id="lyo-aura"></div>
+      <img src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" class="glyph" />
+      <div class="status-text" id="lyo-status">All is calm</div>
+      <button id="lyo-feed">Feed Me</button>
     </div>
-    <div class="card" id="card-lya">
-      <div class="aura" id="aura-lya"></div>
-      <img class="glyph" id="glyph-lya" src="Lya_Glyph_Clear.png" alt="Lya Glyph" />
-      <div class="name">Lya</div>
-      <button id="feed-btn-lya">Feed Me!</button>
-      <div class="feed-time" id="next-feed-lya"></div>
+
+    <div class="twin" id="lya">
+      <div class="aura" id="lya-aura"></div>
+      <img src="Lya_Glyph_Clear.png" alt="Lya Glyph" class="glyph" />
+      <div class="status-text" id="lya-status">All is calm</div>
+      <button id="lya-feed">Feed Me</button>
     </div>
   </div>
 
   <script>
-    const FEED_INTERVAL_MINUTES = 180;
-    const states = [
-      { minutes: 150, color: '#00ffff' }, // calm (blue)
-      { minutes: 165, color: 'yellow' }, // warning
-      { minutes: 175, color: 'orange' }, // urgent
-      { minutes: 180, color: 'red' }, // very hungry
-    ];
+    const twins = {
+      lyo: {
+        isSick: false,
+        isHungry: true,
+      },
+      lya: {
+        isSick: true, // for testing
+        isHungry: false,
+      },
+    };
 
-    const babies = ['lyo', 'lya'];
+    function updateTwinUI(name) {
+      const twin = twins[name];
+      const aura = document.getElementById(`${name}-aura`);
+      const status = document.getElementById(`${name}-status`);
+      const feedBtn = document.getElementById(`${name}-feed`);
 
-    function updateAura(id, minutesSinceLastFeed) {
-      const aura = document.getElementById(`aura-${id}`);
-      let color = '#00ffff';
-      for (let s of states) {
-        if (minutesSinceLastFeed >= s.minutes) color = s.color;
+      // Reset
+      aura.className = 'aura';
+
+      if (twin.isSick) {
+        aura.classList.add('puke-green');
+        status.innerText = `${capitalize(name)} is not feeling well`;
+        feedBtn.disabled = true;
+        feedBtn.classList.add('disabled');
+      } else if (twin.isHungry) {
+        aura.style.backgroundColor = 'red';
+        status.innerText = `${capitalize(name)} is hungry`;
+        feedBtn.disabled = false;
+        feedBtn.classList.remove('disabled');
+      } else {
+        aura.style.backgroundColor = 'blue';
+        status.innerText = `All is calm`;
+        feedBtn.disabled = true;
+        feedBtn.classList.add('disabled');
       }
-      aura.style.backgroundColor = color;
-      aura.style.boxShadow = `0 0 60px 30px ${color}`;
     }
 
-    function updateDisplay(id) {
-      const now = Date.now();
-      const lastFeed = parseInt(localStorage.getItem(`lastFeed-${id}`) || 0);
-      const elapsedMinutes = Math.floor((now - lastFeed) / 60000);
-      const remaining = Math.max(0, FEED_INTERVAL_MINUTES - elapsedMinutes);
-      document.getElementById(`next-feed-${id}`).innerText = `Next feed in: ${Math.floor(remaining / 60)}h ${remaining % 60}m`;
-      updateAura(id, elapsedMinutes);
-      const button = document.getElementById(`feed-btn-${id}`);
-      button.disabled = remaining > 0;
+    function capitalize(name) {
+      return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
-    function feedBaby(id) {
-      localStorage.setItem(`lastFeed-${id}`, Date.now().toString());
-      updateDisplay(id);
+    function setup() {
+      ['lyo', 'lya'].forEach(name => {
+        const feedBtn = document.getElementById(`${name}-feed`);
+        feedBtn.addEventListener('click', () => {
+          twins[name].isHungry = false;
+          updateTwinUI(name);
+        });
+        updateTwinUI(name);
+      });
     }
 
-    babies.forEach(id => {
-      document.getElementById(`feed-btn-${id}`).addEventListener('click', () => feedBaby(id));
-      updateDisplay(id);
-    });
-
-    setInterval(() => babies.forEach(updateDisplay), 60000);
+    setup();
   </script>
 </body>
 </html>
+
