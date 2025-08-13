@@ -2,225 +2,204 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Timecove Monitor: Lyo & Lya</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timecove Monitor</title>
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
       background-color: #111;
-      color: white;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
       text-align: center;
+      padding: 2rem;
     }
 
     h1 {
-      margin: 1.5rem 0 0.5rem;
-    }
-
-    .monitor-wrapper {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      padding: 2rem;
-      gap: 2rem;
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     .monitor {
-      background-color: #1b1b1b;
-      border-radius: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+    }
+
+    .panel {
+      background-color: #1a1a1a;
       padding: 2rem;
-      flex: 1 1 300px;
-      max-width: 400px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.05);
+      border-radius: 1rem;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      width: 320px;
     }
 
-    .glyph {
+    .name {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .aura {
+      margin-bottom: 1rem;
+    }
+
+    .aura img {
       width: 120px;
-      height: 120px;
-      object-fit: contain;
-      margin: 1rem auto;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-      transition: box-shadow 0.5s ease;
+      border-radius: 100%;
+      box-shadow: 0 0 40px #ffdc66;
     }
 
-    @keyframes pulse {
-      0%   { transform: scale(1); opacity: 0.85; }
-      50%  { transform: scale(1.08); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.85; }
+    .states {
+      margin-bottom: 1rem;
     }
 
-    .buttons button {
-      margin: 0.5rem;
-      padding: 0.75rem 1.25rem;
-      font-size: 1rem;
+    .states button {
+      margin: 0.25rem;
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 8px;
+      font-weight: bold;
+      color: #fff;
       cursor: pointer;
-      transition: transform 0.2s ease;
     }
 
-    .buttons button:hover {
-      transform: scale(1.05);
-    }
-    .glow-wrapper {
-  display: inline-block;
-  padding: 10px;
-  border-radius: 50%;
-  transition: box-shadow 0.5s ease;
-}
-
-    .calm { background-color: #4db6ac; }
+    .calm { background-color: #3fbfbb; }
     .alert { background-color: #f44336; }
-    .dreaming { background-color: #512da8; }
+    .dreaming { background-color: #6a1b9a; }
     .sleeping { background-color: #37474f; }
+
+    .feed-button {
+      margin: 1rem 0;
+    }
+
+    .feed-button button {
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      background: #fff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .feed-button button:disabled {
+      background-color: #ccc;
+      color: #555;
+      border-color: #777;
+      cursor: not-allowed;
+    }
+
+    .cooldown {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-top: 0.3rem;
+    }
+
+    .log {
+      font-size: 0.85rem;
+      text-align: left;
+      margin-top: 1rem;
+      background: #222;
+      padding: 0.8rem;
+      border-radius: 8px;
+      color: #aaa;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      margin-bottom: 0.3rem;
+    }
   </style>
 </head>
 <body>
   <h1>Timecove Monitor: Lyo & Lya</h1>
-  <div class="monitor-wrapper">
-    
-    <!-- Lyo -->
-    <div class="monitor" id="lyo-monitor">
-      <h2>Lyo</h2>
-     <div id="lyo-glow-wrapper" class="glow-wrapper">
-  <img id="Lyo_Glyph_Clear.png" class="glyph" src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" />
-</div>
-      <div class="buttons">
-        <button class="calm" onclick="setLyoState('calm')">Calm</button>
-        <button class="alert" onclick="setLyoState('alert')">Alert</button>
-        <button class="dreaming" onclick="setLyoState('dreaming')">Dreaming</button>
-        <button class="sleeping" onclick="setLyoState('sleeping')">Sleeping</button>
-        <button id="feed-lyo" onclick="feedBaby('lyo')">Feed Lyo</button>
+  <div class="monitor">
+
+    <!-- Lyo Panel -->
+    <div class="panel">
+      <div class="name">Lyo</div>
+      <div class="aura">
+        <img src="Lyo_Glyph_Clear.png" alt="Lyo">
+      </div>
+      <div class="states">
+        <button class="calm">Calm</button>
+        <button class="alert">Alert</button>
+        <button class="dreaming">Dreaming</button>
+        <button class="sleeping">Sleeping</button>
+      </div>
+      <div class="feed-button">
+        <button id="feedLyoBtn" onclick="feed('Lyo', 'Dreammilk', 6)">Feed Lyo (Dreammilk)</button>
+        <div class="cooldown" id="lyoCooldown"></div>
+      </div>
+      <div class="log" id="lyoLog">
+        <div class="log-entry">No recent feedings.</div>
       </div>
     </div>
 
-    <!-- Lya -->
-    <div class="monitor" id="lya-monitor">
-      <h2>Lya</h2>
-      <div id="lya-glow-wrapper" class="glow-wrapper">
-  <img id="Lya_Glyph_Clear.png" class="glyph" src="Lya_Glyph_Clear.png" alt="Lya Glyph" />
-</div>
-      <div class="buttons">
-        <button class="calm" onclick="setLyaState('calm')">Calm</button>
-        <button class="alert" onclick="setLyaState('alert')">Alert</button>
-        <button class="dreaming" onclick="setLyaState('dreaming')">Dreaming</button>
-        <button class="sleeping" onclick="setLyaState('sleeping')">Sleeping</button>
-        <button id="feed-lya" onclick="feedBaby('lya')">Feed Lya</button>
+    <!-- Lya Panel -->
+    <div class="panel">
+      <div class="name">Lya</div>
+      <div class="aura">
+        <img src="Lya_Glypha_Clear.png" alt="Lya">
+      </div>
+      <div class="states">
+        <button class="calm">Calm</button>
+        <button class="alert">Alert</button>
+        <button class="dreaming">Dreaming</button>
+        <button class="sleeping">Sleeping</button>
+      </div>
+      <div class="feed-button">
+        <button id="feedLyaBtn" onclick="feed('Lya', 'Dreammilk', 6)">Feed Lya (Dreammilk)</button>
+        <div class="cooldown" id="lyaCooldown"></div>
+      </div>
+      <div class="log" id="lyaLog">
+        <div class="log-entry">No recent feedings.</div>
       </div>
     </div>
 
   </div>
 
   <script>
-    const lyoGlyph = document.getElementById('lyo-glyph');
-    const lyaGlyph = document.getElementById('lya-glyph');
+    const cooldowns = {};
 
-    const glowStyles = {
-      calm: '0 0 20px #4db6ac',
-      alert: '0 0 25px #f44336',
-      dreaming: '0 0 25px #9575cd',
-      sleeping: '0 0 15px #90a4ae'
-    };
+    function feed(name, type, cooldownHours) {
+      const btn = document.getElementById(`feed${name}Btn`);
+      const cooldownDisplay = document.getElementById(`${name.toLowerCase()}Cooldown`);
+      const log = document.getElementById(`${name.toLowerCase()}Log`);
 
-   function setLyoState(state) {
-  const wrapper = document.getElementById('lyo-glow-wrapper');
-  const glowStyles = {
-    calm: '0 0 20px #4db6ac',
-    alert: '0 0 25px #f44336',
-    dreaming: '0 0 25px #9575cd',
-    sleeping: '0 0 15px #90a4ae'
-  };
-  wrapper.style.boxShadow = glowStyles[state];
-}
+      // Log entry
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.textContent = `${timestamp} — Fed with ${type}`;
+      if (log.children.length > 0 && log.children[0].textContent === 'No recent feedings.') {
+        log.innerHTML = '';
+      }
+      log.insertBefore(entry, log.firstChild);
+      if (log.children.length > 3) log.removeChild(log.lastChild);
 
-   function setLyaState(state) {
-  const wrapper = document.getElementById('lya-glow-wrapper');
-  const glowStyles = {
-    calm: '0 0 20px #4db6ac',
-    alert: '0 0 25px #f44336',
-    dreaming: '0 0 25px #9575cd',
-    sleeping: '0 0 15px #90a4ae'
-  };
-  wrapper.style.boxShadow = glowStyles[state];
-}
-    // Initialize hunger and time
-let lyo = { hunger: 0, state: "calm", name: "Lyo" };
-let lya = { hunger: 0, state: "calm", name: "Lya" };
+      // Disable button for cooldown
+      btn.disabled = true;
+      const cooldownMs = cooldownHours * 60 * 60 * 1000;
+      const endTime = new Date(now.getTime() + cooldownMs);
+      cooldownDisplay.textContent = `Next feeding in ${cooldownHours} hrs`;
 
-// Simulated Time (0-23)
-let simHour = 6;
-
-// Bottle inventory
-let bottlesReady = 4; // for future use
-
-// Hunger builder – every 30s = 30 mins
-setInterval(() => {
-  simHour = (simHour + 1) % 24;
-
-  lyo.hunger += 10;
-  lya.hunger += 10;
-
-  updateFeedingState(lyo, "lyo");
-  updateFeedingState(lya, "lya");
-
-  updateFeedButtons();
-}, 30000);
-
-// Determine hunger state
-function updateFeedingState(baby, idPrefix) {
-  const wrapper = document.getElementById(`${idPrefix}-glow-wrapper`);
-  const glyph = document.getElementById(`${idPrefix}-glyph`);
-  const hunger = baby.hunger;
-
-  let state = "calm";
-  if (hunger >= 90) state = "crying";
-  else if (hunger >= 70) state = "fussy";
-  else if (hunger >= 40) state = "alert";
-
-  baby.state = state;
-
-  const glowStyles = {
-    calm: '0 0 20px #4db6ac',
-    alert: '0 0 25px #ffc107',
-    fussy: '0 0 25px #ff9800',
-    crying: '0 0 30px #f44336'
-  };
-  wrapper.style.boxShadow = glowStyles[state];
-}
-
-// Determine bottle type based on time
-function getBottleType() {
-  if (simHour >= 6 && simHour < 18) return "Echo Sip";
-  else if (simHour >= 18 && simHour < 22) return "Starbottle";
-  else return "Dreammilk";
-}
-
-// Feeding logic
-function feedBaby(idPrefix) {
-  const baby = idPrefix === "lyo" ? lyo : lya;
-  const bottle = getBottleType();
-
-  if (baby.hunger < 40) {
-    console.log(`${baby.name} isn't hungry right now.`);
-    return;
-  }
-
-  // Reset hunger
-  baby.hunger = 0;
-  baby.state = "calm";
-  updateFeedingState(baby, idPrefix);
-
-  console.log(`You gave ${baby.name} a ${bottle}. They seem content.`);
-}
-
-// Update button text
-function updateFeedButtons() {
-  const bottle = getBottleType();
-  document.getElementById("feed-lyo").innerText = `Feed Lyo (${bottle})`;
-  document.getElementById("feed-lya").innerText = `Feed Lya (${bottle})`;
-}
-
+      cooldowns[name] = setInterval(() => {
+        const remaining = endTime - new Date();
+        if (remaining <= 0) {
+          clearInterval(cooldowns[name]);
+          btn.disabled = false;
+          cooldownDisplay.textContent = '';
+        } else {
+          const hrs = Math.floor(remaining / 3600000);
+          const mins = Math.floor((remaining % 3600000) / 60000);
+          cooldownDisplay.textContent = `Next feeding in ${hrs}h ${mins}m`;
+        }
+      }, 1000);
+    }
   </script>
 </body>
 </html>
+
