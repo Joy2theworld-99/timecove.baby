@@ -3,114 +3,169 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Twin Halo States</title>
+<title>Twins Halo Monitor</title>
 <style>
   body {
-    background-color: black;
-    color: white;
     font-family: Arial, sans-serif;
-    text-align: center;
+    background: #111;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
   }
+
+  /* Container for glyph + halo */
   .twin-container {
-    display: inline-block;
-    margin: 30px;
     position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 40px;
   }
-  .halo-layer {
+
+  .glyph {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+
+  /* Halo layer styles */
+  .halo-ring {
     position: absolute;
     top: 50%;
     left: 50%;
     border-radius: 50%;
     transform: translate(-50%, -50%);
+    animation: pulse 2s infinite;
     pointer-events: none;
+    z-index: 1;
   }
-  .twin-img {
-    display: block;
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 50%;
-    position: relative;
-    z-index: 10;
+
+  @keyframes pulse {
+    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   }
-  .button-container {
-    margin-top: 15px;
+
+  /* Buttons */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
   }
-  .state-btn {
-    padding: 8px 12px;
-    margin: 3px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+
+  button {
+    background: #333;
     color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  button.active {
+    border: 2px solid yellow;
+    box-shadow: 0 0 10px yellow;
   }
 </style>
 </head>
 <body>
 
-<h1>Twins Halo State Tracker</h1>
+<h1>Twins Halo Monitor</h1>
 
-<div id="twins-area">
-  <div class="twin-container" id="lyo">
-    <img src="Lyo_Glyph_Clear.png" class="twin-img">
-    <div class="button-container">
-      <button class="state-btn" style="background-color: red;" onclick="toggleState('lyo','feeding')">Feeding</button>
-      <button class="state-btn" style="background-color: orange;" onclick="toggleState('lyo','diaper')">Diaper</button>
-      <button class="state-btn" style="background-color: blue;" onclick="toggleState('lyo','bath')">Bath</button>
-      <button class="state-btn" style="background-color: purple;" onclick="toggleState('lyo','play')">Play</button>
-      <button class="state-btn" style="background-color: green;" onclick="toggleState('lyo','sick')">Sick</button>
-    </div>
-  </div>
+<!-- LYO -->
+<div class="twin-container" id="lyo-container">
+  <div class="glyph"></div>
+</div>
 
-  <div class="twin-container" id="lya">
-    <img src="Lya_Glyph_Clear.png" class="twin-img">
-    <div class="button-container">
-      <button class="state-btn" style="background-color: red;" onclick="toggleState('lya','feeding')">Feeding</button>
-      <button class="state-btn" style="background-color: orange;" onclick="toggleState('lya','diaper')">Diaper</button>
-      <button class="state-btn" style="background-color: blue;" onclick="toggleState('lya','bath')">Bath</button>
-      <button class="state-btn" style="background-color: purple;" onclick="toggleState('lya','play')">Play</button>
-      <button class="state-btn" style="background-color: green;" onclick="toggleState('lya','sick')">Sick</button>
-    </div>
-  </div>
+<!-- LYA -->
+<div class="twin-container" id="lya-container">
+  <div class="glyph"></div>
+</div>
+
+<!-- Controls for manual testing -->
+<div class="controls">
+  <button onclick="toggleState('lyo','calm')">Lyo Calm</button>
+  <button onclick="toggleState('lyo','hungry')">Lyo Hungry</button>
+  <button onclick="toggleState('lyo','tired')">Lyo Tired</button>
+  <button onclick="toggleState('lyo','sick')">Lyo Sick</button>
+  <button onclick="toggleState('lya','calm')">Lya Calm</button>
+  <button onclick="toggleState('lya','hungry')">Lya Hungry</button>
+  <button onclick="toggleState('lya','tired')">Lya Tired</button>
+  <button onclick="toggleState('lya','sick')">Lya Sick</button>
 </div>
 
 <script>
-const stateColors = {
-  feeding: 'red',
-  diaper: 'orange',
-  bath: 'blue',
-  play: 'purple',
-  sick: 'limegreen'
-};
+  const stateColors = {
+    calm:   'rgba(0, 128, 255, 0.6)', // blue
+    hungry: 'rgba(255, 165, 0, 0.6)', // orange
+    tired:  'rgba(128, 0, 128, 0.6)', // purple
+    sick:   'rgba(173, 255, 47, 0.8)' // puke green
+  };
 
-const twinStates = {
-  lyo: { feeding: false, diaper: false, bath: false, play: false, sick: false },
-  lya: { feeding: false, diaper: false, bath: false, play: false, sick: false }
-};
+  // Store active needs for each twin
+  let twinStates = {
+    lyo: [],
+    lya: []
+  };
 
-function toggleState(twinId, state) {
-  twinStates[twinId][state] = !twinStates[twinId][state];
-  renderHalos(twinId);
-}
+  function renderHalos(twinId) {
+    const container = document.getElementById(twinId + '-container');
 
-function renderHalos(twinId) {
-  const container = document.getElementById(twinId);
-  const oldHalos = container.querySelectorAll('.halo-layer');
-  oldHalos.forEach(h => h.remove());
+    // Remove old halos
+    container.querySelectorAll('.halo-ring').forEach(r => r.remove());
 
-  const activeStates = Object.keys(twinStates[twinId]).filter(s => twinStates[twinId][s]);
+    // Draw halos for each state
+    twinStates[twinId].forEach((state, index) => {
+      const ring = document.createElement('div');
+      const size = 120 + index * 20;
+      ring.className = 'halo-ring';
+      ring.style.width = size + 'px';
+      ring.style.height = size + 'px';
+      ring.style.border = `4px solid ${stateColors[state]}`;
+      ring.style.boxShadow = `0 0 20px ${stateColors[state]}`;
+      container.appendChild(ring);
+    });
+  }
 
-  activeStates.forEach((state, index) => {
-    const halo = document.createElement('div');
-    halo.className = 'halo-layer';
-    halo.style.width = `${220 + index * 20}px`;
-    halo.style.height = `${220 + index * 20}px`;
-    halo.style.border = `5px solid ${stateColors[state]}`;
-    halo.style.zIndex = 1;
-    container.appendChild(halo);
-  });
-}
+  function toggleState(twinId, state) {
+    const states = twinStates[twinId];
+    const index = states.indexOf(state);
+
+    if (index > -1) {
+      states.splice(index, 1);
+    } else {
+      // Special rule: sick overrides all
+      if (state === 'sick') twinStates[twinId] = [];
+      states.push(state);
+    }
+
+    // Update halos
+    renderHalos(twinId);
+
+    // Update buttons
+    document.querySelectorAll(`button[onclick*="${twinId}"]`).forEach(btn => {
+      const btnState = btn.textContent.toLowerCase().split(' ')[1];
+      btn.classList.toggle('active', twinStates[twinId].includes(btnState));
+    });
+  }
+
+  // Initialize
+  renderHalos('lyo');
+  renderHalos('lya');
 </script>
 
 </body>
 </html>
+
