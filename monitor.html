@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lyo/Lya Monitor Prototype</title>
+  <title>Timecove Monitor: Lyo & Lya</title>
   <style>
     body {
       margin: 0;
@@ -11,98 +11,111 @@
       background-color: #111;
       color: white;
       text-align: center;
-      transition: background-color 1s ease;
-    }
-
-    .container {
-      padding: 2rem;
     }
 
     h1 {
-      margin-bottom: 1rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .monitor-wrapper {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .monitor {
+      background-color: #222;
+      border-radius: 20px;
+      padding: 2rem;
+      flex: 1 1 300px;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.1);
     }
 
     .glyph {
-      font-size: 5rem;
-      margin: 2rem 0;
+      width: 120px;
+      height: 120px;
+      margin: 1rem auto;
       animation: pulse 2s infinite;
-      transition: transform 0.5s ease;
-    }
-
-    @keyframes pulse {
-      0%   { transform: scale(1); opacity: 0.6; }
-      50%  { transform: scale(1.2); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.6; }
+      border-radius: 50%;
+      transition: box-shadow 1s ease;
     }
 
     .buttons button {
       margin: 0.5rem;
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 1.25rem;
       font-size: 1rem;
       border: none;
       border-radius: 8px;
       cursor: pointer;
     }
 
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 0.8; }
+      50%  { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+
     .calm { background-color: #4db6ac; }
     .alert { background-color: #f44336; }
     .dreaming { background-color: #512da8; }
     .sleeping { background-color: #37474f; }
-
-    audio {
-      display: none;
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Timecove Monitor: Lyo / Lya</h1>
-    <div id="glyph" class="glyph">🌀</div>
-    <div class="buttons">
-      <button class="calm" onclick="setState('calm')">Calm</button>
-      <button class="alert" onclick="setState('alert')">Alert</button>
-      <button class="dreaming" onclick="setState('dreaming')">Dreaming</button>
-      <button class="sleeping" onclick="setState('sleeping')">Sleeping</button>
+  <h1>Timecove Monitor: Lyo & Lya</h1>
+  <div class="monitor-wrapper">
+    
+    <!-- Lyo's Monitor -->
+    <div class="monitor" id="lyo-monitor">
+      <h2>Lyo</h2>
+      <img id="Lyo_Newborn_Swaddle_Diamond.png" class="glyph" src="lyo.png" alt="Lyo Glyph" />
+      <div class="buttons">
+        <button class="calm" onclick="setLyoState('calm')">Calm</button>
+        <button class="alert" onclick="setLyoState('alert')">Alert</button>
+        <button class="dreaming" onclick="setLyoState('dreaming')">Dreaming</button>
+        <button class="sleeping" onclick="setLyoState('sleeping')">Sleeping</button>
+      </div>
     </div>
-    <audio id="audio" loop></audio>
+
+    <!-- Lya's Monitor -->
+    <div class="monitor" id="lya-monitor">
+      <h2>Lya</h2>
+      <img id="Lya_Mirror2.png" class="glyph" src="lya.png" alt="Lya Glyph" />
+      <div class="buttons">
+        <button class="calm" onclick="setLyaState('calm')">Calm</button>
+        <button class="alert" onclick="setLyaState('alert')">Alert</button>
+        <button class="dreaming" onclick="setLyaState('dreaming')">Dreaming</button>
+        <button class="sleeping" onclick="setLyaState('sleeping')">Sleeping</button>
+      </div>
+    </div>
+
   </div>
 
   <script>
-    const glyph = document.getElementById('glyph');
-    const body = document.body;
-    const audio = document.getElementById('audio');
+    const lyoGlyph = document.getElementById('lyo-glyph');
+    const lyaGlyph = document.getElementById('lya-glyph');
 
-    const states = {
-      calm: {
-        bg: '#4db6ac',
-        glyph: '🌀',
-        sound: 'calm.mp3' // placeholder
-      },
-      alert: {
-        bg: '#f44336',
-        glyph: '⚠️',
-        sound: 'alert.mp3'
-      },
-      dreaming: {
-        bg: '#512da8',
-        glyph: '✨',
-        sound: 'dreaming.mp3'
-      },
-      sleeping: {
-        bg: '#37474f',
-        glyph: '💤',
-        sound: 'sleeping.mp3'
-      }
-    };
+    function setLyoState(state) {
+      const glow = {
+        calm: '0 0 20px #4db6ac',
+        alert: '0 0 25px #f44336',
+        dreaming: '0 0 25px #9575cd',
+        sleeping: '0 0 15px #90a4ae'
+      };
+      lyoGlyph.style.boxShadow = glow[state];
+    }
 
-    function setState(state) {
-      const { bg, glyph: g, sound } = states[state];
-      body.style.backgroundColor = bg;
-      glyph.textContent = g;
-
-      // Optional audio setup (muted by default, add actual files later)
-      // audio.src = sound;
-      // audio.play().catch(e => console.log("Audio playback blocked"));
+    function setLyaState(state) {
+      const glow = {
+        calm: '0 0 20px #4db6ac',
+        alert: '0 0 25px #f44336',
+        dreaming: '0 0 25px #9575cd',
+        sleeping: '0 0 15px #90a4ae'
+      };
+      lyaGlyph.style.boxShadow = glow[state];
     }
   </script>
 </body>
