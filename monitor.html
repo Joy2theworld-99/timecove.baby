@@ -6,123 +6,142 @@
   <title>Feeding Monitor</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f0f8ff;
-      padding: 2rem;
+      margin: 0;
+      background-color: #000; /* black background */
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: white;
     }
 
-    .baby-card {
-      border-radius: 1rem;
-      padding: 1.5rem;
-      margin: 1rem auto;
-      max-width: 400px;
-      background: #ffffff;
-      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .card {
+      background: #111;
+      border-radius: 20px;
+      padding: 30px;
+      width: 300px;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+      text-align: center;
       position: relative;
     }
 
     .aura {
       width: 120px;
       height: 120px;
-      margin: 0 auto 1rem;
+      margin: 0 auto 10px;
       border-radius: 50%;
-      background: url('babyface.png') center/cover no-repeat; /* Replace with actual face */
-      box-shadow: 0 0 40px 20px transparent;
-      transition: box-shadow 0.3s;
+      background-color: #999;
+      box-shadow: 0 0 60px 30px #999;
+      transition: background-color 0.4s, box-shadow 0.4s;
     }
 
     .name {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
       font-weight: bold;
+      margin: 10px 0 10px;
     }
 
-    .feed-btn {
-      font-size: 1rem;
-      padding: 0.5rem 1.5rem;
+    button {
+      background-color: #32928f;
+      color: white;
       border: none;
       border-radius: 8px;
-      background: #5f9ea0;
-      color: white;
+      padding: 10px 20px;
+      font-size: 1rem;
       cursor: pointer;
+      margin-bottom: 10px;
     }
 
-    .feed-btn:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
+    button:disabled {
+      background-color: gray;
+      cursor: default;
     }
 
-    .timer {
-      margin-top: 0.5rem;
+    .feed-time {
       font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    .glyph {
+      width: 60px;
+      height: auto;
+      margin: 10px auto;
     }
   </style>
 </head>
 <body>
-  <div class="baby-card" id="Lyo">
-    <div class="aura" id="aura-Lyo"></div>
-    <div class="name">Lyo</div>
-    <button class="feed-btn" id="feed-Lyo" onclick="feedBaby('Lyo')">Feed Me!</button>
-    <div class="timer" id="timer-Lyo">Next feed in: 0h 0m</div>
-  </div>
-
-  <div class="baby-card" id="Lya">
-    <div class="aura" id="aura-Lya"></div>
-    <div class="name">Lya</div>
-    <button class="feed-btn" id="feed-Lya" onclick="feedBaby('Lya')">Feed Me!</button>
-    <div class="timer" id="timer-Lya">Next feed in: 0h 0m</div>
+  <div class="container">
+    <div class="card" id="card-lyo">
+      <div class="aura" id="aura-lyo"></div>
+      <img class="glyph" id="glyph-lyo" src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" />
+      <div class="name">Lyo</div>
+      <button id="feed-btn-lyo">Feed Me!</button>
+      <div class="feed-time" id="next-feed-lyo"></div>
+    </div>
+    <div class="card" id="card-lya">
+      <div class="aura" id="aura-lya"></div>
+      <img class="glyph" id="glyph-lya" src="Lya_Glyph_Clear.png" alt="Lya Glyph" />
+      <div class="name">Lya</div>
+      <button id="feed-btn-lya">Feed Me!</button>
+      <div class="feed-time" id="next-feed-lya"></div>
+    </div>
   </div>
 
   <script>
-    const FEED_INTERVAL_HOURS = 3;
-    const babies = ['Lyo', 'Lya'];
+    const FEED_INTERVAL_MINUTES = 180;
+    const states = [
+      { minutes: 150, color: '#00ffff' }, // calm (blue)
+      { minutes: 165, color: 'yellow' }, // warning
+      { minutes: 175, color: 'orange' }, // urgent
+      { minutes: 180, color: 'red' }, // very hungry
+    ];
 
-    function getNextFeedTime(babyId) {
-      return localStorage.getItem(`${babyId}-nextFeed`) || 0;
-    }
+    const babies = ['lyo', 'lya'];
 
-    function setNextFeedTime(babyId) {
-      const nextTime = Date.now() + FEED_INTERVAL_HOURS * 60 * 60 * 1000;
-      localStorage.setItem(`${babyId}-nextFeed`, nextTime);
-    }
-
-    function updateState(babyId) {
-      const now = Date.now();
-      const nextFeed = parseInt(getNextFeedTime(babyId));
-      const feedBtn = document.getElementById(`feed-${babyId}`);
-      const timer = document.getElementById(`timer-${babyId}`);
-      const aura = document.getElementById(`aura-${babyId}`);
-      const timeLeft = nextFeed - now;
-
-      if (timeLeft <= 0) {
-        feedBtn.disabled = false;
-        feedBtn.textContent = "Feed Me!";
-        aura.style.boxShadow = "0 0 60px 30px #FF000066"; // Alert Red
-        timer.textContent = "Ready to feed";
-      } else {
-        feedBtn.disabled = true;
-        feedBtn.textContent = "Fed";
-        aura.style.boxShadow = "0 0 60px 30px #00FFFF66"; // Calm Cyan
-        const mins = Math.floor(timeLeft / 60000) % 60;
-        const hrs = Math.floor(timeLeft / 3600000);
-        timer.textContent = `Next feed in: ${hrs}h ${mins}m`;
+    function updateAura(id, minutesSinceLastFeed) {
+      const aura = document.getElementById(`aura-${id}`);
+      let color = '#00ffff';
+      for (let s of states) {
+        if (minutesSinceLastFeed >= s.minutes) color = s.color;
       }
+      aura.style.backgroundColor = color;
+      aura.style.boxShadow = `0 0 60px 30px ${color}`;
     }
 
-    function feedBaby(babyId) {
-      setNextFeedTime(babyId);
-      updateState(babyId);
+    function updateDisplay(id) {
+      const now = Date.now();
+      const lastFeed = parseInt(localStorage.getItem(`lastFeed-${id}`) || 0);
+      const elapsedMinutes = Math.floor((now - lastFeed) / 60000);
+      const remaining = Math.max(0, FEED_INTERVAL_MINUTES - elapsedMinutes);
+      document.getElementById(`next-feed-${id}`).innerText = `Next feed in: ${Math.floor(remaining / 60)}h ${remaining % 60}m`;
+      updateAura(id, elapsedMinutes);
+      const button = document.getElementById(`feed-btn-${id}`);
+      button.disabled = remaining > 0;
     }
 
-    function tick() {
-      babies.forEach(updateState);
+    function feedBaby(id) {
+      localStorage.setItem(`lastFeed-${id}`, Date.now().toString());
+      updateDisplay(id);
     }
 
-    window.onload = () => {
-      tick();
-      setInterval(tick, 60000); // Check every minute
-    }
+    babies.forEach(id => {
+      document.getElementById(`feed-btn-${id}`).addEventListener('click', () => feedBaby(id));
+      updateDisplay(id);
+    });
+
+    setInterval(() => babies.forEach(updateDisplay), 60000);
   </script>
 </body>
 </html>
