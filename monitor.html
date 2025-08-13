@@ -1,170 +1,267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Timecove Monitor</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Timecove Monitor: Lyo & Lya</title>
   <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-    }
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-    }
-    .card {
-      background: #1c1c1c;
-      padding: 1.5rem;
-      border-radius: 15px;
-      width: 300px;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
-    }
-    .card img {
-      width: 100px;
-      filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.25));
-    }
-    .states button {
-      margin: 0.25rem;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      color: #fff;
-      cursor: pointer;
-    }
-    .calm { background: #2ec4b6; }
-    .alert { background: #e63946; }
-    .dreaming { background: #7b2cbf; }
-    .sleeping { background: #3a506b; }
-    .feed-btn {
-      margin-top: 1rem;
-      padding: 0.75rem 1rem;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-    }
-    .log {
-      margin-top: 1rem;
-      font-size: 0.85rem;
-      background: #222;
-      padding: 0.75rem;
-      border-radius: 8px;
-    }
-    .aura {
-      transition: filter 0.5s;
-    }
-    @media (max-width: 700px) {
-      .card {
-        width: 90%;
-      }
-    }
-  </style>
+   :root{
+    --bg:#111; --panel:#1a1a1a; --ink:#fff; --muted:#aaa;
+    --calm:#3fbfbb; --alert:#f44336; --dream:#6a1b9a; --sleep:#37474f;
+  }
+  html,body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin:0}
+  h1{font-size:clamp(1.6rem,5vw,2.6rem);text-align:center;margin:24px 0}
+  .wrap{display:flex;flex-direction:column;gap:24px;padding:16px;max-width:1200px;margin:0 auto}
+  @media(min-width:900px){.wrap{flex-direction:row;justify-content:center}}
+  .panel{background:var(--panel);border-radius:18px;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.4);flex:1;max-width:520px;margin:0 auto}
+  .name{font-weight:800;font-size:clamp(1.4rem,3vw,1.8rem);text-align:center;margin:0 0 8px}
+  .auraBox{display:grid;place-items:center;margin:10px 0 16px}
+  .aura{width:180px;aspect-ratio:1/1;border-radius:999px;display:grid;place-items:center;transition:box-shadow .6s ease, transform .6s ease}
+  .aura img{width:92px;height:auto;display:block}
+  .states{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0 14px}
+  .states button{border:0;border-radius:10px;padding:10px 14px;color:#fff;font-weight:700;cursor:pointer}
+  .states .calm{background:var(--calm)} .states .alert{background:var(--alert)}
+  .states .dream{background:var(--dream)} .states .sleep{background:var(--sleep)}
+  .feed{display:grid;gap:6px;justify-items:center;margin:10px 0 12px}
+  .feed button{border:2px solid #fff;background:#fff;color:#000;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
+  .feed button[disabled]{background:#cfcfcf;color:#555;border-color:#8a8a8a;cursor:not-allowed}
+  .cool{font-size:.92rem;color:#ccc;min-height:1.2em}
+  .log{background:#202020;border-radius:12px;padding:12px 12px;color:var(--muted);font-size:.95rem;max-height:130px;overflow:auto}
+  .log .item{padding:6px 6px;border-radius:8px}
+  .log .item + .item{margin-top:6px}
+  .muted{color:#9aa}
+  .divider{height:1px;background:#2b2b2b;margin:12px 0}
+</style>
 </head>
 <body>
   <h1>Timecove Monitor: Lyo & Lya</h1>
-  <div class="container">
-    <div class="card" id="lyoCard">
-      <h2>Lyo</h2>
-      <img id="lyoAura" src="Lyo_Glyph_Clear.png" class="aura" alt="Lyo Pebble">
-      <div class="states">
-        <button class="calm" onclick="setState('lyo', 'calm')">Calm</button>
-        <button class="alert" onclick="setState('lyo', 'alert')">Alert</button>
-        <button class="dreaming" onclick="setState('lyo', 'dreaming')">Dreaming</button>
-        <button class="sleeping" onclick="setState('lyo', 'sleeping')">Sleeping</button>
-      </div>
-      <button class="feed-btn" onclick="feed('lyo')">Feed Lyo (Dreammilk)</button>
-      <p id="lyoCooldown"></p>
-      <div class="log" id="lyoLog"></div>
-    </div>
 
-    <div class="card" id="lyaCard">
-      <h2>Lya</h2>
-      <img id="lyaAura" src="Lya_Glyph_Clear.png" class="aura" alt="Lya Pebble">
-      <div class="states">
-        <button class="calm" onclick="setState('lya', 'calm')">Calm</button>
-        <button class="alert" onclick="setState('lya', 'alert')">Alert</button>
-        <button class="dreaming" onclick="setState('lya', 'dreaming')">Dreaming</button>
-        <button class="sleeping" onclick="setState('lya', 'sleeping')">Sleeping</button>
+  <div class="wrap">
+    <!-- Lyo -->
+    <section class="panel" data-id="lyo">
+      <h2 class="name">Lyo</h2>
+      <div class="auraBox">
+        <div class="aura" id="aura-lyo"><img src="Lyo_Glyph_Clear.png" alt="Lyo"></div>
       </div>
-      <button class="feed-btn" onclick="feed('lya')">Feed Lya (Dreammilk)</button>
-      <p id="lyaCooldown"></p>
-      <div class="log" id="lyaLog"></div>
-    </div>
+
+      <div class="states">
+        <button class="calm"  data-state="calm">Calm</button>
+        <button class="alert" data-state="alert">Alert</button>
+        <button class="dream" data-state="dreaming">Dreaming</button>
+        <button class="sleep" data-state="sleeping">Sleeping</button>
+      </div>
+
+      <div class="feed">
+        <button id="feed-lyo">Feed Lyo (Dreammilk)</button>
+        <div class="cool" id="cool-lyo"></div>
+      </div>
+
+      <div class="log" id="log-lyo"></div>
+    </section>
+
+    <!-- Lya -->
+    <section class="panel" data-id="lya">
+      <h2 class="name">Lya</h2>
+      <div class="auraBox">
+        <div class="aura" id="aura-lya"><img src="Lya_Glyph_Clear.png" alt="Lya"></div>
+      </div>
+
+      <div class="states">
+        <button class="calm"  data-state="calm">Calm</button>
+        <button class="alert" data-state="alert">Alert</button>
+        <button class="dream" data-state="dreaming">Dreaming</button>
+        <button class="sleep" data-state="sleeping">Sleeping</button>
+      </div>
+
+      <div class="feed">
+        <button id="feed-lya">Feed Lya (Dreammilk)</button>
+        <div class="cool" id="cool-lya"></div>
+      </div>
+
+      <div class="log" id="log-lya"></div>
+    </section>
   </div>
 
-  <script>
-    const FEED_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours in ms
+<script>
+/* ------------------ CONFIG ------------------ */
+const TICK_MS = 30_000;              // 30s real = 1 sim hour (for hunger growth)
+const HUNGER_PER_TICK = 8;           // 0-100 scale
+const HUNGER_THRESHOLDS = { alert:40, fussy:70, crying:90 };
+const COOLDOWNS_HOURS = { EchoSip:3, Starbottle:4, Dreammilk:6 };
+const FEED_SEQUENCE = ["EchoSip","Starbottle","Dreammilk"]; // rotates by sim time
 
-    function setState(twin, state) {
-      localStorage.setItem(`${twin}State`, state);
-      updateAura(twin);
+/* ------------ STATE / PERSISTENCE ----------- */
+const KEY = "timecove.monitor.v2";
+const now = () => Date.now();
+
+function defaultTwin(name){
+  return {
+    name, hunger: 10, state: "calm",
+    lastFeedType: null,
+    lastFeedAt: 0,
+    cooldownUntil: 0,
+    log: []
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return { simHour: 6, twins:{ lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") } };
+    const parsed = JSON.parse(raw);
+    // ensure shape
+    parsed.twins ??= { lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") };
+    return parsed;
+  }catch(e){
+    return { simHour: 6, twins:{ lyo: defaultTwin("Lyo"), lya: defaultTwin("Lya") } };
+  }
+}
+function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+let state = loadState();
+
+/* ----------------- UTILITIES ---------------- */
+function fmtTime(ts){
+  return new Date(ts).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', second:'2-digit'});
+}
+function setAuraColor(id, color){
+  const el = document.getElementById(`aura-${id}`);
+  el.style.boxShadow = `0 0 44px ${color}`;
+}
+
+/* -------------- UI BINDINGS ----------------- */
+function renderTwin(id){
+  const twin = state.twins[id];
+
+  // aura auto from hunger/state
+  const hunger = twin.hunger;
+  let color = "rgba(63,191,187,.55)";   // calm
+  if(hunger >= HUNGER_THRESHOLDS.alert) color = "rgba(255,193,7,.55)";  // yellow
+  if(hunger >= HUNGER_THRESHOLDS.fussy) color = "rgba(255,152,0,.6)";   // orange
+  if(hunger >= HUNGER_THRESHOLDS.crying) color = "rgba(244,67,54,.65)"; // red
+  if(twin.state === "dreaming") color = "rgba(106,27,154,.6)";
+  if(twin.state === "sleeping") color = "rgba(55,71,79,.55)";
+  setAuraColor(id, color);
+
+  // feed button enable/disabled + label
+  const feedBtn = document.getElementById(`feed-${id}`);
+  const coolEl  = document.getElementById(`cool-${id}`);
+
+  const remaining = twin.cooldownUntil - now();
+  if(remaining > 0){
+    feedBtn.disabled = true;
+    const hrs = Math.floor(remaining/3_600_000);
+    const mins = Math.floor((remaining%3_600_000)/60_000);
+    coolEl.textContent = `Next feeding in ${hrs}h ${String(mins).padStart(2,'0')}m`;
+  }else{
+    feedBtn.disabled = false;
+    coolEl.textContent = "";
+  }
+
+  // update feed button label by current sequence (time-based)
+  const type = feedTypeForHour(state.simHour);
+  feedBtn.textContent = `Feed ${twin.name} (${type})`;
+
+  // render log
+  const logEl = document.getElementById(`log-${id}`);
+  if(!twin.log.length){
+    logEl.innerHTML = `<div class="item muted">No recent feedings.</div>`;
+  }else{
+    logEl.innerHTML = twin.log.slice(-8).reverse().map(
+      e => `<div class="item">${e.time} — ${e.text}</div>`
+    ).join("");
+  }
+}
+
+function renderAll(){ renderTwin("lyo"); renderTwin("lya"); saveState(); }
+
+/* --------------- LOGIC / TICK --------------- */
+function feedTypeForHour(simHour){
+  if(simHour >= 6 && simHour < 18) return FEED_SEQUENCE[0];        // Echo Sip
+  if(simHour >= 18 && simHour < 22) return FEED_SEQUENCE[1];       // Starbottle
+  return FEED_SEQUENCE[2];                                          // Dreammilk
+}
+
+function feed(id){
+  const twin = state.twins[id];
+  const type = feedTypeForHour(state.simHour);
+  const hours = COOLDOWNS_HOURS[type];
+
+  // cooldown guard
+  if(twin.cooldownUntil > now()) return;
+
+  // apply effects
+  twin.hunger = Math.max(0, twin.hunger - 60);  // big relief
+  twin.state  = "calm";
+  twin.lastFeedType = type;
+  twin.lastFeedAt = now();
+  twin.cooldownUntil = now() + hours*60*60*1000;
+
+  twin.log.push({ time: fmtTime(twin.lastFeedAt), text: `Fed with ${type}` });
+  if(twin.log.length > 50) twin.log.shift(); // keep it light
+
+  renderTwin(id);
+}
+
+function manualState(id, newState){
+  const twin = state.twins[id];
+  twin.state = newState;
+  // manual state doesn't override hunger-driven alert if really high
+  renderTwin(id);
+}
+
+function tick(){
+  // time advances; hunger grows
+  state.simHour = (state.simHour + 1) % 24;          // +1 sim hour per tick
+  for(const id of ["lyo","lya"]){
+    const t = state.twins[id];
+    t.hunger = Math.min(100, t.hunger + HUNGER_PER_TICK);
+
+    // map hunger --> auto state if not sleeping/dreaming
+    if(t.state !== "sleeping" && t.state !== "dreaming"){
+      if(t.hunger >= HUNGER_THRESHOLDS.crying)       t.state = "crying";
+      else if(t.hunger >= HUNGER_THRESHOLDS.fussy)   t.state = "fussy";
+      else if(t.hunger >= HUNGER_THRESHOLDS.alert)   t.state = "alert";
+      else                                           t.state = "calm";
     }
+  }
 
-    function updateAura(twin) {
-      const state = localStorage.getItem(`${twin}State`) || 'calm';
-      const img = document.getElementById(`${twin}Aura`);
-      const filters = {
-        calm: 'drop-shadow(0 0 10px #2ec4b6)',
-        alert: 'drop-shadow(0 0 10px #e63946)',
-        dreaming: 'drop-shadow(0 0 10px #7b2cbf)',
-        sleeping: 'drop-shadow(0 0 10px #3a506b)',
-      };
-      img.style.filter = filters[state];
+  // run event engine hooks (extensible)
+  runEvents();
+
+  renderAll();
+}
+
+/* ---------- EXTENSIBLE EVENT ENGINE ---------- */
+// register simple event rules; each checked every tick
+const EventRegistry = [];
+function registerEvent(rule){ EventRegistry.push(rule); }
+function runEvents(){ EventRegistry.forEach(rule => rule(state)); }
+
+// Example: gentle drowse after Dreammilk (future-ready placeholder)
+registerEvent((state)=>{
+  for(const id of ["lyo","lya"]){
+    const t = state.twins[id];
+    if(t.lastFeedType === "Dreammilk" && now()-t.lastFeedAt > 15*60*1000 && t.state!=="sleeping"){
+      // after 15 real mins, nudge toward sleeping if hunger low
+      if(t.hunger < 40){ t.state = "sleeping"; }
     }
+  }
+});
 
-    function feed(twin) {
-      const now = new Date().getTime();
-      localStorage.setItem(`${twin}LastFed`, now);
-      logFeeding(twin, now);
-      updateCooldown(twin);
-    }
+/* --------------- WIRE UP UI ------------------ */
+for(const id of ["lyo","lya"]){
+  document.getElementById(`feed-${id}`).addEventListener("click", ()=>feed(id));
+  const panel = document.querySelector(`.panel[data-id="${id}"]`);
+  panel.querySelectorAll(".states button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      manualState(id, btn.dataset.state);
+    });
+  });
+}
 
-    function logFeeding(twin, timestamp) {
-      const log = document.getElementById(`${twin}Log`);
-      const time = new Date(timestamp).toLocaleTimeString();
-      log.textContent = `${time} — Fed with Dreammilk`;
-    }
-
-    function updateCooldown(twin) {
-      const lastFed = parseInt(localStorage.getItem(`${twin}LastFed`) || 0);
-      const now = new Date().getTime();
-      const diff = FEED_INTERVAL - (now - lastFed);
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-      const cooldown = document.getElementById(`${twin}Cooldown`);
-      if (diff > 0) {
-        cooldown.textContent = `Next feeding in ${hours}h ${minutes}m`;
-      } else {
-        cooldown.textContent = `Ready to feed!`;
-      }
-    }
-
-    function loadTwin(twin) {
-      updateAura(twin);
-      updateCooldown(twin);
-      const lastFed = parseInt(localStorage.getItem(`${twin}LastFed`) || 0);
-      if (lastFed) logFeeding(twin, lastFed);
-    }
-
-    // Initial load + refresh every minute
-    ['lyo', 'lya'].forEach(loadTwin);
-    setInterval(() => {
-      ['lyo', 'lya'].forEach(updateCooldown);
-    }, 60000);
-  </script>
+renderAll();                      // first paint
+setInterval(tick, TICK_MS);       // start the world
+</script>
 </body>
 </html>
-
