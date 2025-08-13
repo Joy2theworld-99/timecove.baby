@@ -26,21 +26,28 @@
     }
 
     .monitor {
-      background-color: #222;
+      background-color: #1b1b1b;
       border-radius: 20px;
       padding: 2rem;
       flex: 1 1 300px;
       max-width: 400px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+      box-shadow: 0 0 20px rgba(255,255,255,0.05);
     }
 
     .glyph {
       width: 120px;
       height: 120px;
+      object-fit: contain;
       margin: 1rem auto;
-      animation: pulse 2s infinite;
       border-radius: 50%;
-      transition: box-shadow 1s ease;
+      animation: pulse 2s infinite;
+      transition: box-shadow 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 0.85; }
+      50%  { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.85; }
     }
 
     .buttons button {
@@ -50,12 +57,11 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      transition: transform 0.2s ease;
     }
 
-    @keyframes pulse {
-      0%   { transform: scale(1); opacity: 0.8; }
-      50%  { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
+    .buttons button:hover {
+      transform: scale(1.05);
     }
 
     .calm { background-color: #4db6ac; }
@@ -68,10 +74,10 @@
   <h1>Timecove Monitor: Lyo & Lya</h1>
   <div class="monitor-wrapper">
     
-    <!-- Lyo's Monitor -->
+    <!-- Lyo -->
     <div class="monitor" id="lyo-monitor">
       <h2>Lyo</h2>
-      <img id="Lyo_Newborn_Swaddle_Diamond.png" class="glyph" src="lyo.png" alt="Lyo Glyph" />
+      <img id="Lyo_Glyph.png" class="glyph" src="Lyo_Glyph.png" alt="Lyo Glyph" />
       <div class="buttons">
         <button class="calm" onclick="setLyoState('calm')">Calm</button>
         <button class="alert" onclick="setLyoState('alert')">Alert</button>
@@ -80,10 +86,10 @@
       </div>
     </div>
 
-    <!-- Lya's Monitor -->
+    <!-- Lya -->
     <div class="monitor" id="lya-monitor">
       <h2>Lya</h2>
-      <img id="Lya_Mirror2.png" class="glyph" src="lya.png" alt="Lya Glyph" />
+      <img id="lya-glyph" class="glyph" src="lya.png" alt="Lya Glyph" />
       <div class="buttons">
         <button class="calm" onclick="setLyaState('calm')">Calm</button>
         <button class="alert" onclick="setLyaState('alert')">Alert</button>
@@ -98,24 +104,19 @@
     const lyoGlyph = document.getElementById('lyo-glyph');
     const lyaGlyph = document.getElementById('lya-glyph');
 
+    const glowStyles = {
+      calm: '0 0 20px #4db6ac',
+      alert: '0 0 25px #f44336',
+      dreaming: '0 0 25px #9575cd',
+      sleeping: '0 0 15px #90a4ae'
+    };
+
     function setLyoState(state) {
-      const glow = {
-        calm: '0 0 20px #4db6ac',
-        alert: '0 0 25px #f44336',
-        dreaming: '0 0 25px #9575cd',
-        sleeping: '0 0 15px #90a4ae'
-      };
-      lyoGlyph.style.boxShadow = glow[state];
+      lyoGlyph.style.boxShadow = glowStyles[state];
     }
 
     function setLyaState(state) {
-      const glow = {
-        calm: '0 0 20px #4db6ac',
-        alert: '0 0 25px #f44336',
-        dreaming: '0 0 25px #9575cd',
-        sleeping: '0 0 15px #90a4ae'
-      };
-      lyaGlyph.style.boxShadow = glow[state];
+      lyaGlyph.style.boxShadow = glowStyles[state];
     }
   </script>
 </body>
