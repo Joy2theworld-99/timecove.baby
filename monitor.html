@@ -6,171 +6,90 @@
 <title>Timecove Monitor: Lyo & Lya</title>
 <style>
   :root{
-    --bg:#0e0f11;
-    --card:#16181b;
-    --text:#f4f6f8;
-    --muted:#a4acb5;
-
-    --calm:#27d4d0;          /* teal */
-    --sleep:#6f78ff;         /* indigo */
-
-    --hungry:#ff4d4d;        /* red */
-    --diaper:#ff9f2e;        /* orange */
+    --bg:#0e0f11; --card:#16181b; --text:#f4f6f8; --muted:#a4acb5;
+    --calm:#27d4d0; --sleep:#6f78ff;
+    --hungry:#ff4d4d; --diaper:#ff9f2e; --soothe:#23b3ff; --sick:#b36bff;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif;
-    display:flex; flex-direction:column; align-items:center; gap:24px; padding:20px;
-  }
-  h1{margin:6px 0 2px; font-weight:900; letter-spacing:.5px; text-align:center}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;gap:18px;padding:16px}
+  h1{margin:6px 0 2px;font-weight:900;letter-spacing:.5px;text-align:center}
 
-  /* ===== Streak panel ===== */
-  .streak{ width:min(1120px,96vw); background:var(--card); border:1px solid rgba(255,255,255,.07);
-           border-radius:18px; padding:10px 12px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
-  .streak .grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px }
-  .streak h3{ margin:0 0 6px; font-size:14px; color:#cfd6de; letter-spacing:.3px }
-  .srow{ display:flex; gap:12px; align-items:center; font-weight:800 }
-  .sname{ width:64px }
-  .schip{ background:#22262c; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.06); font-size:12px }
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+  .chip{background:#202328;border:1px solid rgba(255,255,255,.08);border-radius:999px;padding:6px 10px;font-weight:800}
+  .switch{cursor:pointer}
+  .switch input{display:none}
+  .switch .knob{display:inline-block;background:#101215;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 8px}
+  .switch input:checked + .knob{background:#2e844a;border-color:#2e844a}
 
-  .row{
-    --stage: clamp(260px, 44vw, 360px);
-    display:flex; gap:24px; flex-wrap:wrap; justify-content:center; width:100%;
-  }
-  .monitor{
-    width: min(560px, 96vw);
-    background:var(--card);
-    border-radius:24px;
-    padding:20px 18px 16px;
-    box-shadow:0 16px 40px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.03);
-  }
-  .name{font-size:clamp(22px, 4vw, 28px); font-weight:900; text-align:center; margin:6px 0 6px}
+  /* Streaks */
+  .streak{width:min(1120px,96vw);background:var(--card);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:10px 12px;box-shadow:0 12px 28px rgba(0,0,0,.35)}
+  .streak .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .streak h3{margin:0 0 6px;font-size:14px;color:#cfd6de;letter-spacing:.3px}
+  .srow{display:flex;gap:12px;align-items:center;font-weight:800}
+  .sname{width:64px}
+  .schip{background:#22262c;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.06);font-size:12px}
 
-  .stage{
-    position:relative; width:var(--stage); height:var(--stage); margin:6px auto 10px;
-    display:grid; place-items:center;
-  }
-  .avatar{
-    width: calc(var(--stage) * 0.58);
-    height: calc(var(--stage) * 0.58);
-    border-radius:50%;
-    background:#0d0e10 center/cover no-repeat;
-    position:relative; z-index:3;
-    box-shadow:0 10px 24px rgba(0,0,0,.35) inset, 0 0 0 1px rgba(255,255,255,.04);
-  }
+  .row{--stage:clamp(260px,44vw,360px);display:flex;gap:24px;flex-wrap:wrap;justify-content:center;width:100%}
+  .monitor{width:min(560px,96vw);background:var(--card);border-radius:24px;padding:20px 18px 16px;box-shadow:0 16px 40px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.03)}
+  .name{font-size:clamp(22px,4vw,28px);font-weight:900;text-align:center;margin:6px 0 6px}
 
-  svg.halo{ position:absolute; inset:0; overflow:visible; z-index:2 }
+  .stage{position:relative;width:var(--stage);height:var(--stage);margin:6px auto 10px;display:grid;place-items:center}
+  .avatar{width:calc(var(--stage)*0.58);height:calc(var(--stage)*0.58);border-radius:50%;background:#0d0e10 center/cover no-repeat;position:relative;z-index:3;box-shadow:0 10px 24px rgba(0,0,0,.35) inset,0 0 0 1px rgba(255,255,255,.04)}
+  svg.halo{position:absolute;inset:0;overflow:visible;z-index:2}
+  .baseline{fill:none;stroke-width:calc(var(--stage)*0.04);opacity:.22;transform-origin:50% 50%;filter:drop-shadow(0 0 14px currentColor) drop-shadow(0 0 26px currentColor)}
+  .baseline.calm{color:var(--calm);stroke:var(--calm);animation:breathe 6.5s ease-in-out infinite}
+  .baseline.sleep{color:var(--sleep);stroke:var(--sleep);opacity:.18;animation:breath-sleep 8.5s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.22}50%{transform:scale(1.06);opacity:.32}}
+  @keyframes breath-sleep{0%,100%{transform:scale(1);opacity:.18}50%{transform:scale(1.04);opacity:.26}}
 
-  .baseline{
-    fill:none; stroke-width: calc(var(--stage) * 0.04);
-    opacity:.22; transform-origin:50% 50%;
-    filter: drop-shadow(0 0 14px currentColor) drop-shadow(0 0 26px currentColor);
-  }
-  .baseline.calm{ color:var(--calm); stroke:var(--calm); animation:breathe 6.5s ease-in-out infinite }
-  .baseline.sleep{ color:var(--sleep); stroke:var(--sleep); opacity:.18; animation:breath-sleep 8.5s ease-in-out infinite }
+  .ring{fill:none;stroke-width:calc(var(--stage)*0.035);transform-origin:50% 50%;filter:drop-shadow(0 0 10px currentColor) drop-shadow(0 0 22px currentColor);opacity:1;transition:opacity .2s ease}
+  .cooldown{animation:cooldown .9s ease forwards}
+  @keyframes cooldown{to{opacity:0;transform:scale(.88)}}
+  .nudgePulse{animation:nudgePulse .9s ease-in-out 3}
+  @keyframes nudgePulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
 
-  @keyframes breathe{
-    0%,100%{ transform:scale(1); opacity:.22 }
-    50%    { transform:scale(1.06); opacity:.32 }
-  }
-  @keyframes breath-sleep{
-    0%,100%{ transform:scale(1); opacity:.18 }
-    50%    { transform:scale(1.04); opacity:.26 }
-  }
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+  .pill{border:0;color:#fff;font-weight:800;border-radius:999px;padding:12px 16px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .06s ease,filter .2s ease;font-size:15px}
+  .pill:active{transform:translateY(1px)}
+  .resolve{display:inline-flex;align-items:center;gap:8px}
+  .resolve.hungry{background:var(--hungry)} .resolve.diaper{background:var(--diaper)}
+  .resolve.soothe{background:var(--soothe)} .resolve.sick{background:var(--sick)}
+  .resolve.ghost{background:#2b2e35;color:var(--text)}
+  .toggle{background:#2b2e35;color:var(--text)} .toggle.active.calm{background:var(--calm)} .toggle.active.sleep{background:var(--sleep)}
 
-  .ring{
-    fill:none; stroke-width: calc(var(--stage) * 0.035); transform-origin:50% 50%;
-    filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 22px currentColor);
-    opacity:1; transition:opacity .2s ease;
-  }
-  .cooldown{ animation:cooldown .9s ease forwards }
-  @keyframes cooldown{ to{ opacity:0; transform:scale(.88) } }
+  .meta{text-align:center;color:var(--muted);font-size:13px;margin-top:8px}
+  .countdown{font-weight:800;color:#e9f5f6} .small{font-size:12px;color:#cfd6de}
 
-  /* Gentle nudge pulse for unattended diaper or overdue */
-  .nudgePulse{ animation:nudgePulse .9s ease-in-out 3 }
-  @keyframes nudgePulse{
-    0%{ transform:scale(1) }
-    50%{ transform:scale(1.06) }
-    100%{ transform:scale(1) }
-  }
+  .inline{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  select.bottle,.num{background:#23262b;color:var(--text);border:1px solid #2e3238;border-radius:10px;padding:8px 10px;font-weight:700;width:95px}
+  .num{width:80px;text-align:center}
+  .btnSave{background:#2e844a;border:0;color:#fff;font-weight:800;padding:8px 12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);cursor:pointer}
 
-  .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px }
+  .log{margin-top:12px;background:#121417;border-radius:14px;padding:10px 12px;border:1px solid rgba(255,255,255,.05);max-height:200px;overflow:auto}
+  .log h4{margin:0 0 8px 0;font-size:13px;color:#cdd6df;letter-spacing:.3px}
+  .entry{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-top:1px dashed rgba(255,255,255,.06)}
+  .entry:first-of-type{border-top:none}
+  .ts{color:#c8d3dd}
+  .tag{background:#2b2e35;color:#fff;font-weight:800;padding:4px 8px;border-radius:999px}
 
-  .pill{
-    border:0; color:#fff; font-weight:800; border-radius:999px;
-    padding:12px 16px; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.35);
-    transition:transform .06s ease, filter .2s ease; font-size:15px;
-  }
-  .pill:active{ transform:translateY(1px) }
-
-  /* SHOW resolve buttons again (fix from last iteration) */
-  .resolve{ display:inline-flex; align-items:center; gap:8px }
-
-  .resolve.hungry{ background:var(--hungry) }
-  .resolve.diaper{ background:var(--diaper) }
-  .resolve.ghost{ background:#2b2e35; color:var(--text) }
-
-  .toggle{ background:#2b2e35; color:var(--text) }
-  .toggle.active.calm{ background:var(--calm) }
-  .toggle.active.sleep{ background:var(--sleep) }
-
-  .meta{ text-align:center; color:var(--muted); font-size:13px; margin-top:8px }
-  .countdown{ font-weight:800; color:#e9f5f6 }
-  .small{ font-size:12px; color:#cfd6de }
-
-  .inline{
-    display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap;
-    margin-top:8px;
-  }
-  select.bottle, .num{
-    background:#23262b; color:var(--text); border:1px solid #2e3238; border-radius:10px;
-    padding:8px 10px; font-weight:700; width:95px;
-  }
-  .num{ width:80px; text-align:center }
-  .btnSave{
-    background:#2e844a; border:0; color:#fff; font-weight:800; padding:8px 12px; border-radius:10px;
-    box-shadow:0 6px 18px rgba(0,0,0,.35); cursor:pointer;
-  }
-
-  .log{
-    margin-top:12px; background:#121417; border-radius:14px; padding:10px 12px;
-    border:1px solid rgba(255,255,255,.05);
-    max-height:160px; overflow:auto;
-  }
-  .log h4{ margin:0 0 8px 0; font-size:13px; color:#cdd6df; letter-spacing:.3px }
-  .entry{
-    display:flex; justify-content:space-between; gap:10px; font-size:13px;
-    padding:6px 0; border-top:1px dashed rgba(255,255,255,.06);
-  }
-  .entry:first-of-type{ border-top:none }
-  .ts{ color:#c8d3dd }
-  .tag{
-    background:#2b2e35; color:#fff; font-weight:800; padding:4px 8px; border-radius:999px;
-  }
-
-  /* Toasts */
-  .toasts{
-    position:fixed; right:14px; bottom:16px; display:flex; flex-direction:column; gap:10px;
-    z-index:9999;
-  }
-  .toast{
-    background:#1b1e22; color:#fff; border:1px solid rgba(255,255,255,.08);
-    padding:10px 12px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.4);
-    font-weight:700; font-size:14px; opacity:0; transform:translateY(10px);
-    transition:opacity .2s ease, transform .2s ease;
-  }
-  .toast.show{ opacity:1; transform:translateY(0) }
-  .t-red{ border-color:rgba(255,77,77,.35) }
-  .t-orange{ border-color:rgba(255,159,46,.35) }
-  .t-teal{ border-color:rgba(39,212,208,.35) }
+  .toasts{position:fixed;right:14px;bottom:16px;display:flex;flex-direction:column;gap:10px;z-index:9999}
+  .toast{background:#1b1e22;color:#fff;border:1px solid rgba(255,255,255,.08);padding:10px 12px;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.4);font-weight:700;font-size:14px;opacity:0;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .t-red{border-color:rgba(255,77,77,.35)} .t-orange{border-color:rgba(255,159,46,.35)} .t-teal{border-color:rgba(39,212,208,.35)} .t-blue{border-color:rgba(35,179,255,.35)} .t-purple{border-color:rgba(179,107,255,.35)}
 </style>
 </head>
 <body>
 
 <h1>Timecove Monitor: Lyo & Lya</h1>
+<div class="topbar">
+  <span class="chip">Mode:</span>
+  <label class="switch chip">
+    <input id="modeSwitch" type="checkbox" />
+    <span class="knob">Demo Speed</span>
+  </label>
+  <span class="chip" id="hintSpeed">1 min = 1 sec</span>
+</div>
 
 <!-- STREAK SUMMARY -->
 <section class="streak" id="streak">
@@ -200,24 +119,20 @@
         <circle id="lyo-base" class="baseline calm" cx="50" cy="50" r="38"/>
         <g id="lyo-rings"></g>
       </svg>
-      <div id="lyo-avatar" class="avatar"
-           style="background-image:url('Lyo_Glyph_Clear.png');"></div>
+      <div id="lyo-avatar" class="avatar" style="background-image:url('Lyo_Glyph_Clear.png');"></div>
     </div>
-
     <div class="controls" id="lyo-controls"></div>
 
     <div class="inline">
       <label for="lyo-bottle">Bottle:</label>
       <select id="lyo-bottle" class="bottle">
-        <option>EchoSip</option>
-        <option>Starbottle</option>
-        <option>Dreammilk</option>
+        <option>EchoSip</option><option>Starbottle</option><option>Dreammilk</option>
       </select>
       <span>Interval:</span>
       <input id="lyo-h" class="num" type="number" min="0" value="2">h
       <input id="lyo-m" class="num" type="number" min="0" max="59" value="15">m
       <button class="btnSave" id="lyo-save">Save</button>
-      <div style="flex:1 1 100%; height:0"></div>
+      <div style="flex:1 1 100%;height:0"></div>
       <div class="meta">Next feed in: <span id="lyo-eta" class="countdown">—</span></div>
       <div class="small" id="lyo-diaper-wait"></div>
     </div>
@@ -225,10 +140,9 @@
     <div class="controls" id="lyo-mood"></div>
 
     <div class="log" id="lyo-log">
-      <h4>Feeding Log</h4>
-      <div class="entries feed"></div>
-      <h4 style="margin-top:10px;">Diaper Log</h4>
-      <div class="entries diaper"></div>
+      <h4>Feeding Log</h4><div class="entries feed"></div>
+      <h4 style="margin-top:10px;">Diaper Log</h4><div class="entries diaper"></div>
+      <h4 style="margin-top:10px;">Event Log</h4><div class="entries misc"></div>
     </div>
   </section>
 
@@ -240,24 +154,20 @@
         <circle id="lya-base" class="baseline calm" cx="50" cy="50" r="38"/>
         <g id="lya-rings"></g>
       </svg>
-      <div id="lya-avatar" class="avatar"
-           style="background-image:url('Lya_Glyph_Clear.png');"></div>
+      <div id="lya-avatar" class="avatar" style="background-image:url('Lya_Glyph_Clear.png');"></div>
     </div>
-
     <div class="controls" id="lya-controls"></div>
 
     <div class="inline">
       <label for="lya-bottle">Bottle:</label>
       <select id="lya-bottle" class="bottle">
-        <option>EchoSip</option>
-        <option>Starbottle</option>
-        <option>Dreammilk</option>
+        <option>EchoSip</option><option>Starbottle</option><option>Dreammilk</option>
       </select>
       <span>Interval:</span>
       <input id="lya-h" class="num" type="number" min="0" value="2">h
       <input id="lya-m" class="num" type="number" min="0" max="59" value="45">m
       <button class="btnSave" id="lya-save">Save</button>
-      <div style="flex:1 1 100%; height:0"></div>
+      <div style="flex:1 1 100%;height:0"></div>
       <div class="meta">Next feed in: <span id="lya-eta" class="countdown">—</span></div>
       <div class="small" id="lya-diaper-wait"></div>
     </div>
@@ -265,516 +175,448 @@
     <div class="controls" id="lya-mood"></div>
 
     <div class="log" id="lya-log">
-      <h4>Feeding Log</h4>
-      <div class="entries feed"></div>
-      <h4 style="margin-top:10px;">Diaper Log</h4>
-      <div class="entries diaper"></div>
+      <h4>Feeding Log</h4><div class="entries feed"></div>
+      <h4 style="margin-top:10px;">Diaper Log</h4><div class="entries diaper"></div>
+      <h4 style="margin-top:10px;">Event Log</h4><div class="entries misc"></div>
     </div>
   </section>
 </div>
 
-<!-- Toast container -->
 <div class="toasts" id="toasts"></div>
 
 <script>
-/* ---------------- CONFIG ----------------
-   DEMO: 1 minute = 1 second for quick testing. */
-const DEMO = false;                // real minutes
-const MILLIS_PER_MIN = 60_000;
+/* =========================
+   CONFIG & SPEED
+========================= */
+const CONFIG = {
+  // Demo/Real-time (toggled in UI)
+  demo: true,                      // initial
+  minuteMs(){ return this.demo ? 1000 : 60_000; },
 
-/* Probability of needs on wake (0..1) */
-const HUNGRY_ON_WAKE_PROB = 0.15;  // was 0.30
-const DIAPER_ON_WAKE_PROB = 0.18;  // was 0.25
+  // Random wake windows (minutes)
+  sleepRandom(){ return { min: this.demo?3:60, max: this.demo?7:150 }; },
 
-/* Gentle nudge if diaper unresolved >= this many minutes */
-// nudge diaper a bit later IRL
-const DIAPER_NUDGE_MIN = DEMO ? 5 : 15;
+  // Needs probabilities on wake
+  hungryOnWake: 0.20,  // slightly calmer
+  diaperOnWake: 0.16,
 
-/* NEW: Nudge if Hungry is cleared without feeding */
-const OVERDUE_CHECK_MIN = DEMO ? 7 : 7;      // minutes
-const STREAK_GRACE_MIN  = DEMO ? 10 : 10;    // grace beyond expected for streak
+  // Nudges
+  diaperNudgeMin(){ return this.demo?5:15; },
+  overdueCheckMin(){ return this.demo?7:7; },
+  streakGraceMin(){ return this.demo?10:10; },
 
-const SLEEP_RANDOM = {
-  min: DEMO ? 3 : 180,              // ~3–6 hours
-  max: DEMO ? 7 : 360
+  // Sickness
+  sicknessDailyChance: 0.04,       // ~4% per “day” tick (see day pulse)
+  sicknessDurationMin(){ return this.demo?8:240; }, // minutes (demo vs real)
+
+  // Gentle play/tummy/giggles planners (minutes)
+  playEvery(){ return this.demo?6:120; },
+  tummyEvery(){ return this.demo?9:240; },
+  bathEvery(){ return this.demo?60:1440; },   // ~daily
+  doctorRareEvery(){ return this.demo?90:4320 }, // rare
+
+  // After-feed side effect
+  spitupChance: 0.08
 };
 
-const STORAGE_KEY = 'timecove.twins.v6'; // bump version for new fields
+const STORAGE_KEY = 'timecove.twins.v7';  // bump for new fields
 
-const COLOR = {
-  hungry: css('--hungry'),
-  diaper: css('--diaper'),
-  calm:   css('--calm'),
-  sleep:  css('--sleep')
-};
-function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+/* =========================
+   UTIL
+========================= */
+function now(){ return Date.now(); }
+function minute(ms){ return ms / CONFIG.minuteMs(); }
+function msFromMin(m){ return m * CONFIG.minuteMs(); }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function chance(p){ return Math.random() < p; }
+function cap(id){ return id==='lyo'?'Lyo':'Lya'; }
+function html(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
 
-/* ------------ WebAudio tiny chimes ------------ */
+/* =========================
+   SOUNDS (WebAudio tiny)
+========================= */
 let AC=null, unlocked=false;
-function ensureAudio(){
-  if(!AC) AC = new (window.AudioContext||window.webkitAudioContext)();
-  if(AC.state==='suspended') AC.resume();
-}
-window.addEventListener('pointerdown', ()=>{ ensureAudio(); unlocked=true; }, {once:true});
+function ensureAudio(){ if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }
+window.addEventListener('pointerdown',()=>{ ensureAudio(); unlocked=true; },{once:true});
+function tone(f,d=.15,g=.06,t='sine',w=0){ if(!AC) return; const s=AC.currentTime+w,o=AC.createOscillator(),x=AC.createGain();o.type=t;o.frequency.value=f;o.connect(x);x.connect(AC.destination);x.gain.value=0;x.gain.linearRampToValueAtTime(g,s+.01);x.gain.exponentialRampToValueAtTime(.0001,s+d);o.start(s);o.stop(s+d+.05);}
+function chimeHungry(){ if(!unlocked) return; ensureAudio(); tone(880,.16,.06,'sine',0); tone(1318.5,.18,.05,'triangle',.08);}
+function chimeFed(){ if(!unlocked) return; ensureAudio(); tone(659.25,.12,.05,'sine',0); tone(523.25,.14,.05,'sine',.08);}
+function chimeOverdue(){ if(!unlocked) return; ensureAudio(); tone(392,.14,.06,'sine',0); tone(523.25,.16,.06,'triangle',.1);}
+function chimeSoothe(){ if(!unlocked) return; ensureAudio(); tone(520,.14,.05,'triangle',0);}
 
-function tone(freq, dur=0.15, gain=0.06, type='sine', when=0){
-  if(!AC) return;
-  const t=AC.currentTime+when, o=AC.createOscillator(), g=AC.createGain();
-  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(AC.destination);
-  g.gain.value=0; g.gain.linearRampToValueAtTime(gain, t+0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  o.start(t); o.stop(t+dur+0.05);
-}
-function chimeHungry(){ if(!unlocked) return; ensureAudio(); tone(880,.16,.06,'sine',0); tone(1318.5,.18,.05,'triangle',.08); }
-function chimeFed(){ if(!unlocked) return; ensureAudio(); tone(659.25,.12,.05,'sine',0); tone(523.25,.14,.05,'sine',.08); }
-function chimeOverdue(){ if(!unlocked) return; ensureAudio(); tone(392,.14,.06,'sine',0); tone(523.25,.16,.06,'triangle',.1); }
+/* =========================
+   NOTIFICATIONS / TOAST
+========================= */
+function toast(msg, cls=''){ const box=document.getElementById('toasts'); const el=document.createElement('div'); el.className=`toast ${cls}`; el.textContent=msg; box.appendChild(el); requestAnimationFrame(()=>el.classList.add('show')); setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),200); },3000); }
+async function notify(msg, cls=''){ try{ if('Notification' in window){ if(Notification.permission==='default'){ await Notification.requestPermission().catch(()=>{});} if(Notification.permission==='granted'){ const n=new Notification('Timecove',{body:msg,silent:true}); setTimeout(()=>n.close(),3500);} } }catch{} if(navigator.vibrate){ navigator.vibrate(40);} toast(msg, cls); }
 
-/* -------- Notifications (toast + optional vibrate + Web Notification) -------- */
-function toast(msg, cls=''){
-  const box = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = `toast ${cls}`;
-  el.textContent = msg;
-  box.appendChild(el);
-  requestAnimationFrame(()=>el.classList.add('show'));
-  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),200); }, 3000);
-}
-async function notify(msg, color=''){
-  try{
-    if('Notification' in window){
-      if(Notification.permission==='default'){ await Notification.requestPermission().catch(()=>{}); }
-      if(Notification.permission==='granted'){
-        const n = new Notification('Timecove', { body: msg, silent:true });
-        setTimeout(()=>n.close(), 3500);
-      }
-    }
-  }catch{}
-  if(navigator.vibrate){ navigator.vibrate(40); }
-  toast(msg, color);
-}
-
-/* --------- MODEL (with persistence) --------- */
-const model = {
-  lyo:  initTwin(135),
-  lya:  initTwin(165)
+/* =========================
+   MODEL
+========================= */
+const COLOR = {
+  hungry:getCSS('--hungry'), diaper:getCSS('--diaper'), calm:getCSS('--calm'),
+  sleep:getCSS('--sleep'), soothe:getCSS('--soothe'), sick:getCSS('--sick')
 };
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
 function initTwin(intervalMin){
   return {
     mood:'calm',
-    needs:[],
-    nextFeedAt:null,
-    expectedNextFeedAt:null,  // for streak on-time calc
-    lastFedAt:null,
+    needs:[],                     // ['Hungry','Diaper','Sick','Soothe']
     bottle:'EchoSip',
-    log:[],
-    diaperLog:[],
-    intervalMin,
+    // timers
+    intervalMin, nextFeedAt:null, expectedNextFeedAt:null,
     wakeAt:null,
-    diaperSince:null,
-    lastDiaperNudge:null,
-    // overdue nudge state
-    overdueTimer:null,
-    overdueScheduledAt:null,
+    // states
+    lastFedAt:null, diaperSince:null, lastDiaperNudge:null,
+    overdueTimer:null, overdueScheduledAt:null,
+    isSick:false, sickUntil:null,
+    // planners (next scheduled “nice” events)
+    nextPlayAt:null, nextTummyAt:null, nextBathAt:null, nextDoctorAt:null,
+    // logs
+    log:[], diaperLog:[], miscLog:[],
     // streaks
-    streak:{ consecutive:0, record:0, today:{} }
+    streak:{consecutive:0,record:0,today:{}}
   };
 }
+const model = { lyo:initTwin(135), lya:initTwin(165) };
 
-function loadState(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    ['lyo','lya'].forEach(id=>{ if(saved[id]) Object.assign(model[id], saved[id]); });
-  }catch{}
-}
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
-  localStorage.setItem(STORAGE_KEY + '.pulse', String(Date.now()));
-}
+function loadState(){ try{ const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); ['lyo','lya'].forEach(id=>{ if(s[id]) Object.assign(model[id], s[id]); }); }catch{} }
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(model)); localStorage.setItem(STORAGE_KEY+'.pulse', String(now())); }
 
-/* -------- Feeding timers -------- */
+/* =========================
+   CORE TIMERS
+========================= */
 function scheduleNextFeed(id){
-  model[id].nextFeedAt = Date.now() + model[id].intervalMin * MILLIS_PER_MIN;
-  model[id].expectedNextFeedAt = model[id].nextFeedAt; // mirror for clarity
+  model[id].nextFeedAt = now() + msFromMin(model[id].intervalMin);
+  model[id].expectedNextFeedAt = model[id].nextFeedAt;
   saveState();
 }
 function ensureTimers(){
-  ['lyo','lya'].forEach(id=>{ if(!model[id].nextFeedAt) scheduleNextFeed(id); });
-}
-function checkFeeding(id){
-  const now = Date.now(), next = model[id].nextFeedAt;
-  if(!next){ scheduleNextFeed(id); return; }
-  if(now >= next && !model[id].needs.includes('Hungry')){
-    model[id].needs.push('Hungry');
-    renderChild(id); saveState();
-    chimeHungry();
-    notify(`${cap(id)} is hungry`, 't-red');
-  }
+  ['lyo','lya'].forEach(id=>{
+    if(!model[id].nextFeedAt) scheduleNextFeed(id);
+    const SR = CONFIG.sleepRandom();
+    if(!model[id].wakeAt) model[id].wakeAt = now() + msFromMin(randInt(SR.min, SR.max));
+    if(!model[id].nextPlayAt)  model[id].nextPlayAt  = now() + msFromMin(CONFIG.playEvery());
+    if(!model[id].nextTummyAt) model[id].nextTummyAt = now() + msFromMin(CONFIG.tummyEvery());
+    if(!model[id].nextBathAt)  model[id].nextBathAt  = now() + msFromMin(CONFIG.bathEvery());
+    if(!model[id].nextDoctorAt)model[id].nextDoctorAt= now() + msFromMin(CONFIG.doctorRareEvery());
+  });
 }
 
-/* -------- Sleep / Wake + random needs -------- */
-function scheduleRandomWake(id){
-  const mins = randInt(SLEEP_RANDOM.min, SLEEP_RANDOM.max);
-  model[id].wakeAt = Date.now() + mins * MILLIS_PER_MIN;
-  saveState();
+/* =========================
+   CHECKS (run ~2x/sec)
+========================= */
+function tick(){
+  ['lyo','lya'].forEach(id=>{
+    checkFeeding(id);
+    checkWake(id);
+    checkDiaperNudge(id);
+    checkPlannedEvents(id);
+    checkSickness(id);
+    fallbackOverdue(id);
+    updateCountdown(id);
+  });
 }
-function addDiaperNeed(id){
-  if(!model[id].needs.includes('Diaper')){
-    model[id].needs.push('Diaper');
-    if(!model[id].diaperSince) model[id].diaperSince = Date.now();
+function checkFeeding(id){
+  if(model[id].isSick) return; // sick babies don’t get hungry
+  const n = model[id].nextFeedAt;
+  if(!n){ scheduleNextFeed(id); return; }
+  if(now() >= n && !model[id].needs.includes('Hungry')){
+    model[id].needs.push('Hungry'); renderChild(id); saveState();
+    chimeHungry(); notify(`${cap(id)} is hungry`, 't-red');
   }
 }
 function checkWake(id){
   if(model[id].mood!=='sleeping' || !model[id].wakeAt) return;
-  if(Date.now() >= model[id].wakeAt){
-    model[id].mood='calm';
-    model[id].wakeAt=null;
-
-    if(Math.random() < HUNGRY_ON_WAKE_PROB && !model[id].needs.includes('Hungry')) {
-      model[id].needs.push('Hungry');
-      chimeHungry();
-      notify(`${cap(id)} woke up hungry`, 't-red');
+  if(now() >= model[id].wakeAt){
+    model[id].mood='calm'; model[id].wakeAt=null;
+    if(chance(CONFIG.hungryOnWake) && !model[id].isSick && !model[id].needs.includes('Hungry')){
+      model[id].needs.push('Hungry'); chimeHungry(); notify(`${cap(id)} woke hungry`, 't-red');
     }
-    if(Math.random() < DIAPER_ON_WAKE_PROB) {
-      addDiaperNeed(id);
-      notify(`${cap(id)} needs a diaper change`, 't-orange');
-    }
-
+    if(chance(CONFIG.diaperOnWake)){ addDiaperNeed(id); notify(`${cap(id)} needs a diaper change`, 't-orange');}
+    // Sometimes wake fussy → needs soothing
+    if(chance(0.18)){ addSootheNeed(id, 'Rocking'); }
     renderChild(id); saveState();
+    logMisc(id, 'Wake', '');
   }
 }
-
-/* -------- Gentle nudge for unattended diaper -------- */
 function checkDiaperNudge(id){
   if(!model[id].needs.includes('Diaper') || !model[id].diaperSince) return;
-
-  const elapsedMin = (Date.now() - model[id].diaperSince) / MILLIS_PER_MIN;
-  const threshold = DIAPER_NUDGE_MIN;
+  const elapsedMin = minute(now() - model[id].diaperSince);
+  const threshold = CONFIG.diaperNudgeMin();
   const last = model[id].lastDiaperNudge || 0;
-
-  if(elapsedMin >= threshold && (Date.now()-last) >= threshold*MILLIS_PER_MIN){
-    model[id].lastDiaperNudge = Date.now();
-    saveState();
+  if(elapsedMin >= threshold && (now()-last) >= msFromMin(threshold)){
+    model[id].lastDiaperNudge = now(); saveState();
     notify(`${cap(id)} still needs a diaper change`, 't-orange');
-
-    const g = document.getElementById(id+'-rings');
-    const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke === COLOR.diaper);
-    if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2800); }
+    pulseRing(id, 'diaper');
   }
-
   const waitEl = document.getElementById(id+'-diaper-wait');
-  const mins = Math.floor(elapsedMin);
-  const secs = Math.floor((elapsedMin - mins) * 60);
+  const mins = Math.floor(elapsedMin), secs = Math.floor((elapsedMin - mins) * 60);
   waitEl.textContent = `Diaper waiting: ${mins}m ${String(secs).padStart(2,'0')}s`;
 }
-function clearDiaperTimers(id){
-  model[id].diaperSince = null;
-  model[id].lastDiaperNudge = null;
+function checkPlannedEvents(id){
+  const t = now();
+  if(model[id].nextPlayAt && t >= model[id].nextPlayAt){
+    logMisc(id, 'Playtime', 'Smiles & wiggles'); notify(`${cap(id)} wants to play`, 't-teal');
+    model[id].nextPlayAt = t + msFromMin(CONFIG.playEvery());
+    // small chance of peek-a-boo giggles
+    if(chance(0.2)){ logMisc(id, 'Giggles', 'Peek-a-boo!'); notify(`${cap(id)} giggles`, 't-blue'); }
+  }
+  if(model[id].nextTummyAt && t >= model[id].nextTummyAt){
+    logMisc(id, 'Tummy Time', 'A few minutes'); notify(`${cap(id)} tummy time`, 't-blue');
+    model[id].nextTummyAt = t + msFromMin(CONFIG.tummyEvery());
+  }
+  if(model[id].nextBathAt && t >= model[id].nextBathAt){
+    logMisc(id, 'Bath', 'Splish splash'); notify(`${cap(id)} bath time`, 't-blue');
+    model[id].nextBathAt = t + msFromMin(CONFIG.bathEvery());
+  }
+  if(model[id].nextDoctorAt && t >= model[id].nextDoctorAt){
+    logMisc(id, 'Doctor Check-up', 'All good'); notify(`${cap(id)} doctor check-up (routine)`, 't-purple');
+    model[id].nextDoctorAt = t + msFromMin(CONFIG.doctorRareEvery());
+  }
 }
-
-/* -------- Overdue nudge if Hungry cleared w/o feed -------- */
-function clearHungryWithoutFeeding(id){
-  // remove Hungry, re-render
-  const idx = model[id].needs.indexOf('Hungry');
-  if(idx>-1) model[id].needs.splice(idx,1);
-  renderChild(id); saveState();
-
-  // immediate feedback so it "does something" visibly
-  toast(`Okay — I’ll check back on ${cap(id)} in ~${OVERDUE_CHECK_MIN} min`, 't-orange');
-
-  // (re)start overdue window
-  if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); }
-  model[id].overdueScheduledAt = Date.now();
-
-  model[id].overdueTimer = setTimeout(()=> runOverdueCheck(id), OVERDUE_CHECK_MIN * MILLIS_PER_MIN);
-  saveState();
-}
-
-function runOverdueCheck(id){
-  const since = model[id].overdueScheduledAt;
-  if(!since){ return; }
-  // if no feed happened since scheduling → nudge & re-show hungry
-  if(!model[id].lastFedAt || model[id].lastFedAt < since){
-    notify(`${cap(id)} might still be hungry — want to double check?`, 't-red');
-    chimeOverdue();
-    if(!model[id].needs.includes('Hungry')){
-      model[id].needs.push('Hungry');
-      renderChild(id);
-      const g = document.getElementById(id+'-rings');
-      const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke===COLOR.hungry);
-      if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2600); }
+function checkSickness(id){
+  // quick daily-ish pulse to maybe become sick
+  if(!model[id]._nextSickPulse){ model[id]._nextSickPulse = now() + msFromMin(CONFIG.bathEvery()); }
+  if(now() >= model[id]._nextSickPulse){
+    model[id]._nextSickPulse = now() + msFromMin(CONFIG.bathEvery());
+    if(!model[id].isSick && chance(CONFIG.sicknessDailyChance)){
+      setSick(id, true);
     }
   }
-  model[id].overdueTimer = null;
-  model[id].overdueScheduledAt = null;
-  saveState();
+  // auto resolve after duration
+  if(model[id].isSick && model[id].sickUntil && now() >= model[id].sickUntil){
+    setSick(id, false);
+  }
+}
+function fallbackOverdue(id){
+  if(model[id].overdueScheduledAt && now() - model[id].overdueScheduledAt >= msFromMin(CONFIG.overdueCheckMin())){
+    runOverdueCheck(id);
+  }
 }
 
-/* -------- Resolve actions -------- */
-function feedBaby(id){
-  const isHungry = model[id].needs.includes('Hungry');
+/* =========================
+   NEED HELPERS
+========================= */
+function addDiaperNeed(id){ if(!model[id].needs.includes('Diaper')){ model[id].needs.push('Diaper'); if(!model[id].diaperSince) model[id].diaperSince = now(); } }
+function addSootheNeed(id, how='Rocking'){ if(!model[id].needs.includes('Soothe')){ model[id].needs.push('Soothe'); model[id]._sootheHow = how; notify(`${cap(id)} needs ${how.toLowerCase()}`, 't-blue'); pulseRing(id, 'soothe'); } }
+function setSick(id, on){
+  if(on){
+    model[id].isSick = true; model[id].sickUntil = now() + msFromMin(CONFIG.sicknessDurationMin());
+    if(!model[id].needs.includes('Sick')) model[id].needs.push('Sick');
+    // cancel hungry while sick
+    const h = model[id].needs.indexOf('Hungry'); if(h>-1) model[id].needs.splice(h,1);
+    notify(`${cap(id)} isn’t feeling well`, 't-purple'); pulseRing(id, 'sick'); logMisc(id,'Sick','Started');
+  }else{
+    model[id].isSick = false; model[id].sickUntil = null;
+    const k = model[id].needs.indexOf('Sick'); if(k>-1) model[id].needs.splice(k,1);
+    notify(`${cap(id)} is feeling better`, 't-teal'); logMisc(id,'Sick','Resolved');
+  }
+  renderChild(id); saveState();
+}
+function pulseRing(id,type){
+  const g=document.getElementById(id+'-rings'); const ring=[...g.querySelectorAll('.ring')].find(r=>r.style.stroke===COLOR[type]); if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'),2600); }
+}
 
-  const idx = model[id].needs.indexOf('Hungry');
-  if(idx>-1) model[id].needs.splice(idx,1);
+/* =========================
+   ACTIONS / RESOLVES
+========================= */
+function feedBaby(id){
+  if(model[id].isSick){ notify(`${cap(id)} is sick — hold feeding for now`, 't-purple'); return; }
+  const wasHungry = model[id].needs.includes('Hungry');
+  const idx = model[id].needs.indexOf('Hungry'); if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
 
-  const tNow = Date.now();
-
-  // streak on-time: compare to expectedNextFeedAt + grace
+  const tNow = now();
   const expectedBy = model[id].expectedNextFeedAt ?? model[id].nextFeedAt ?? tNow;
-  const onTime = tNow <= (expectedBy + STREAK_GRACE_MIN * MILLIS_PER_MIN);
+  const onTime = tNow <= (expectedBy + msFromMin(CONFIG.streakGraceMin()));
   updateStreak(id, onTime);
 
-  // log the feed
-  const entry = { ts: tNow, bottle: model[id].bottle || 'Bottle' };
-  model[id].log.unshift(entry);
-  if(model[id].log.length>30) model[id].log.length = 30;
-
+  const entry = { ts:tNow, bottle:model[id].bottle||'Bottle' };
+  model[id].log.unshift(entry); if(model[id].log.length>30) model[id].log.length=30;
   model[id].lastFedAt = tNow;
 
-  // cancel any pending overdue check
+  // spit-up
+  if(chance(CONFIG.spitupChance)){ logMisc(id,'Spit-up','Small burp'); notify(`${cap(id)} spit-up a little`, 't-orange'); }
+
   if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); model[id].overdueTimer=null; model[id].overdueScheduledAt=null; }
-
-  scheduleNextFeed(id);
-  renderChild(id); saveState();
-  if(isHungry) chimeFed();
-  notify(`Fed ${cap(id)}`, 't-teal');
+  scheduleNextFeed(id); renderChild(id); saveState();
+  if(wasHungry) chimeFed(); notify(`Fed ${cap(id)}`,'t-teal');
 }
-
 function changeDiaper(id){
-  const idx = model[id].needs.indexOf('Diaper');
-  if(idx>-1) model[id].needs.splice(idx,1);
+  const idx = model[id].needs.indexOf('Diaper'); if(idx>-1) model[id].needs.splice(idx,1);
   if(model[id].mood!=='sleeping') model[id].mood='calm';
-
-  model[id].diaperLog.unshift({ ts: Date.now(), note:'Changed' });
-  if(model[id].diaperLog.length>30) model[id].diaperLog.length = 30;
-
-  clearDiaperTimers(id);
+  model[id].diaperLog.unshift({ ts:now(), note:'Changed' }); if(model[id].diaperLog.length>30) model[id].diaperLog.length=30;
+  model[id].diaperSince=null; model[id].lastDiaperNudge=null;
+  renderChild(id); saveState(); notify(`${cap(id)} is fresh & comfy`,'t-teal');
+  const waitEl=document.getElementById(id+'-diaper-wait'); if(waitEl) waitEl.textContent='';
+}
+function sootheBaby(id){
+  const idx = model[id].needs.indexOf('Soothe'); if(idx>-1) model[id].needs.splice(idx,1);
+  logMisc(id, model[id]._sootheHow||'Soothing','Done'); renderChild(id); saveState(); chimeSoothe(); toast(`${cap(id)} calms down`,'t-teal');
+}
+function clearHungryNoFeed(id){
+  const idx = model[id].needs.indexOf('Hungry'); if(idx>-1) model[id].needs.splice(idx,1);
   renderChild(id); saveState();
-  notify(`${cap(id)} is fresh & comfy`, 't-teal');
-
-  const waitEl = document.getElementById(id+'-diaper-wait');
-  if(waitEl) waitEl.textContent = '';
+  toast(`Okay — I’ll check back on ${cap(id)} in ~${CONFIG.overdueCheckMin()} min`,'t-orange');
+  if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); }
+  model[id].overdueScheduledAt = now();
+  model[id].overdueTimer = setTimeout(()=>runOverdueCheck(id), msFromMin(CONFIG.overdueCheckMin()));
+  saveState();
+}
+function runOverdueCheck(id){
+  const since = model[id].overdueScheduledAt; if(!since) return;
+  if(!model[id].lastFedAt || model[id].lastFedAt < since){
+    notify(`${cap(id)} might still be hungry — want to double check?`,'t-red'); chimeOverdue();
+    if(!model[id].isSick && !model[id].needs.includes('Hungry')){ model[id].needs.push('Hungry'); renderChild(id); pulseRing(id,'hungry'); }
+  }
+  model[id].overdueTimer=null; model[id].overdueScheduledAt=null; saveState();
 }
 
-/* ------- STREAKS ------- */
-function dayKey(ts=Date.now()){ const d=new Date(ts); d.setHours(0,0,0,0); return String(d.getTime()); }
+/* =========================
+   STREAKS
+========================= */
+function dayKey(ts=now()){ const d=new Date(ts); d.setHours(0,0,0,0); return String(d.getTime()); }
 function updateStreak(id, onTime){
-  const s = model[id].streak || (model[id].streak={consecutive:0,record:0,today:{}});
+  const s=model[id].streak||(model[id].streak={consecutive:0,record:0,today:{}});
   s.consecutive = onTime ? s.consecutive+1 : 0;
   if(s.consecutive > (s.record||0)) s.record = s.consecutive;
-
-  const k = dayKey();
-  s.today[k] = (s.today[k]||0) + 1;
-
-  // prune to ~8 days
-  const cutoff = Date.now() - 8*24*60*60*1000;
-  for(const key of Object.keys(s.today)){
-    if(Number(key) < cutoff){ delete s.today[key]; }
-  }
+  const k=dayKey(); s.today[k]=(s.today[k]||0)+1;
+  const cutoff = now()-8*24*60*60*1000; for(const key of Object.keys(s.today)){ if(Number(key)<cutoff) delete s.today[key]; }
   renderStreakPanel();
 }
-function todayCount(id){
-  const s = model[id].streak || { today:{} };
-  return s.today[dayKey()] || 0;
-}
+function todayCount(id){ const s=model[id].streak||{today:{}}; return s.today[dayKey()]||0; }
 function renderStreakPanel(){
-  const twins = ['lyo','lya'];
-  twins.forEach(id=>{
-    const s = model[id].streak || { consecutive:0, record:0, today:{} };
+  ['lyo','lya'].forEach(id=>{
+    const s=model[id].streak||{consecutive:0,record:0,today:{}};
     document.getElementById(`s-${id}-today`).textContent  = `🍼 ${todayCount(id)} today`;
     document.getElementById(`s-${id}-streak`).textContent = `Streak ${s.consecutive||0}`;
     document.getElementById(`s-${id}-record`).textContent = `Record ${s.record||0}`;
   });
 }
 
-/* ------- RENDERING ------- */
+/* =========================
+   RENDER
+========================= */
 function $(id){ return document.getElementById(id); }
+function fmtTs(ms){ const d=new Date(ms); return d.toLocaleString([], {hour:'numeric',minute:'2-digit',month:'short',day:'numeric'}); }
 
 function renderChild(id){
-  // bottle + interval inputs
-  const sel = $(id+'-bottle'); if(sel) sel.value = model[id].bottle;
-  const h = Math.floor(model[id].intervalMin/60), m = model[id].intervalMin%60;
-  const hEl=$(id+'-h'), mEl=$(id+'-m'); if(hEl) hEl.value=h; if(mEl) mEl.value=m;
+  const sel=$(id+'-bottle'); if(sel) sel.value=model[id].bottle;
+  const h=Math.floor(model[id].intervalMin/60), m=model[id].intervalMin%60; const hEl=$(id+'-h'), mEl=$(id+'-m'); if(hEl) hEl.value=h; if(mEl) mEl.value=m;
+  const base=$(id+'-base'); base.classList.toggle('calm',model[id].mood==='calm'); base.classList.toggle('sleep',model[id].mood==='sleeping');
 
-  // baseline
-  const base = $(id+'-base');
-  base.classList.toggle('calm', model[id].mood==='calm');
-  base.classList.toggle('sleep', model[id].mood==='sleeping');
-
-  // need rings (order: Hungry red outer, Diaper orange inner)
-  const g = $(id+'-rings'); g.innerHTML='';
-  const needs = model[id].needs.slice();
-  const mkRing = (r, color)=>{
-    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx','50'); c.setAttribute('cy','50'); c.setAttribute('r', String(r));
-    c.setAttribute('class','ring'); c.setAttribute('style', `stroke:${color}; color:${color}`);
-    return c;
-  };
+  const g=$(id+'-rings'); g.innerHTML='';
+  const needs=model[id].needs.slice();
+  const mkRing=(r,color)=>{ const c=document.createElementNS('http://www.w3.org/2000/svg','circle'); c.setAttribute('cx','50'); c.setAttribute('cy','50'); c.setAttribute('r',String(r)); c.setAttribute('class','ring'); c.setAttribute('style',`stroke:${color};color:${color}`); return c; };
   if(needs.includes('Hungry')) g.appendChild(mkRing(38, COLOR.hungry));
-  if(needs.includes('Diaper')){
-    const r = needs.includes('Hungry') ? 33 : 38;
-    g.appendChild(mkRing(r, COLOR.diaper));
-  }
+  if(needs.includes('Diaper')) g.appendChild(mkRing(needs.includes('Hungry')?33:38, COLOR.diaper));
+  if(needs.includes('Soothe')) g.appendChild(mkRing(28, COLOR.soothe));
+  if(needs.includes('Sick'))   g.appendChild(mkRing(23, COLOR.sick));
 
-  // resolve controls
-  const controls = $(id+'-controls'); controls.innerHTML='';
+  const controls=$(id+'-controls'); controls.innerHTML='';
   if(needs.includes('Hungry')){
-    // Feed
-    const b = document.createElement('button');
-    b.className='pill resolve hungry'; b.textContent='Feed';
-    b.onclick=()=>{
-      const ring = g.querySelector('.ring'); // first (likely hungry)
-      if(ring){ ring.classList.add('cooldown'); setTimeout(()=>feedBaby(id), 900); }
-      else feedBaby(id);
-    };
-    controls.appendChild(b);
-
-    // Clear Hungry (no feed) -> overdue check
-    const c = document.createElement('button');
-    c.className='pill resolve ghost'; c.textContent='Clear Hungry (no feed)';
-    c.onclick=()=>{ clearHungryWithoutFeeding(id); };
-    controls.appendChild(c);
+    const b=document.createElement('button'); b.className='pill resolve hungry'; b.textContent='Feed'; b.onclick=()=>{ const ring=g.querySelector('.ring'); if(ring){ ring.classList.add('cooldown'); setTimeout(()=>feedBaby(id),900);}else feedBaby(id); }; controls.appendChild(b);
+    const c=document.createElement('button'); c.className='pill resolve ghost'; c.textContent='Clear Hungry (no feed)'; c.onclick=()=>clearHungryNoFeed(id); controls.appendChild(c);
   }
   if(needs.includes('Diaper')){
-    const d = document.createElement('button');
-    d.className='pill resolve diaper'; d.textContent='Change Diaper';
-    d.onclick=()=>{
-      const rings = [...g.querySelectorAll('.ring')];
-      const orange = rings.find(r=>r.style.stroke===COLOR.diaper);
-      if(orange){ orange.classList.add('cooldown'); setTimeout(()=>changeDiaper(id), 900); }
-      else changeDiaper(id);
-    };
-    controls.appendChild(d);
+    const d=document.createElement('button'); d.className='pill resolve diaper'; d.textContent='Change Diaper'; d.onclick=()=>{ const rings=[...g.querySelectorAll('.ring')]; const orange=rings.find(r=>r.style.stroke===COLOR.diaper); if(orange){ orange.classList.add('cooldown'); setTimeout(()=>changeDiaper(id),900);}else changeDiaper(id); }; controls.appendChild(d);
+  }
+  if(needs.includes('Soothe')){
+    const s=document.createElement('button'); s.className='pill resolve soothe'; s.textContent=model[id]._sootheHow||'Soothe'; s.onclick=()=>{ const rings=[...g.querySelectorAll('.ring')]; const blue=rings.find(r=>r.style.stroke===COLOR.soothe); if(blue){ blue.classList.add('cooldown'); setTimeout(()=>sootheBaby(id),900);}else sootheBaby(id); }; controls.appendChild(s);
+  }
+  if(needs.includes('Sick')){
+    const s=document.createElement('button'); s.className='pill resolve sick'; s.textContent='Care Pack'; s.onclick=()=>{ // shorten remaining sickness a bit
+      if(model[id].sickUntil){ model[id].sickUntil = Math.min(model[id].sickUntil, now()+msFromMin(CONFIG.sicknessDurationMin()/3)); }
+      toast(`${cap(id)} is resting — care applied`,'t-purple');
+    }; controls.appendChild(s);
   }
 
-  // mood toggles
-  const moodRow = $(id+'-mood'); moodRow.innerHTML='';
-  const calmBtn = document.createElement('button');
-  calmBtn.className = 'pill toggle ' + (model[id].mood==='calm' ? 'active calm':'' );
-  calmBtn.textContent = 'Set Calm';
-  calmBtn.onclick = ()=>{ model[id].mood='calm'; model[id].wakeAt=null; renderChild(id); saveState(); };
+  const moodRow=$(id+'-mood'); moodRow.innerHTML='';
+  const calmBtn=document.createElement('button'); calmBtn.className='pill toggle '+(model[id].mood==='calm'?'active calm':''); calmBtn.textContent='Set Calm'; calmBtn.onclick=()=>{ model[id].mood='calm'; model[id].wakeAt=null; renderChild(id); saveState(); };
+  const sleepBtn=document.createElement('button'); sleepBtn.className='pill toggle '+(model[id].mood==='sleeping'?'active sleep':''); sleepBtn.textContent='Set Sleeping'; sleepBtn.onclick=()=>{ model[id].mood='sleeping'; const SR=CONFIG.sleepRandom(); model[id].wakeAt=now()+msFromMin(randInt(SR.min,SR.max)); renderChild(id); saveState(); logMisc(id,'Sleep','Start'); };
+  moodRow.appendChild(calmBtn); moodRow.appendChild(sleepBtn);
 
-  const sleepBtn = document.createElement('button');
-  sleepBtn.className = 'pill toggle ' + (model[id].mood==='sleeping' ? 'active sleep':'' );
-  sleepBtn.textContent = 'Set Sleeping';
-  sleepBtn.onclick = ()=>{ model[id].mood='sleeping'; scheduleRandomWake(id); renderChild(id); saveState(); };
-
-  moodRow.appendChild(calmBtn);
-  moodRow.appendChild(sleepBtn);
-
-  renderLogs(id);
-  updateCountdown(id);
-
-  // show elapsed diaper wait (if any)
-  const waitEl = document.getElementById(id+'-diaper-wait');
-  if(model[id].needs.includes('Diaper') && model[id].diaperSince){
-    const mins = Math.floor((Date.now()-model[id].diaperSince)/MILLIS_PER_MIN);
-    waitEl.textContent = `Diaper waiting: ${mins}m`;
-  } else { waitEl.textContent = ''; }
-
-  // streak panel refresh on every render
+  renderLogs(id); updateCountdown(id);
+  const waitEl=document.getElementById(id+'-diaper-wait');
+  if(model[id].needs.includes('Diaper') && model[id].diaperSince){ const mins=Math.floor(minute(now()-model[id].diaperSince)); waitEl.textContent=`Diaper waiting: ${mins}m`; } else { waitEl.textContent=''; }
   renderStreakPanel();
 }
-
 function renderLogs(id){
-  // Feeding log
-  const feedWrap = $(id+'-log').querySelector('.entries.feed');
-  feedWrap.innerHTML='';
-  const feeds = model[id].log || [];
-  if(feeds.length===0){
-    feedWrap.innerHTML = `<div class="entry"><span class="ts">No feedings yet.</span><span></span></div>`;
-  }else{
-    feeds.forEach(e=>{
-      feedWrap.insertAdjacentHTML('beforeend',
-        `<div class="entry"><span class="ts">${fmtTs(e.ts)}</span><span class="tag">${html(e.bottle)}</span></div>`);
-    });
+  const feedWrap=$(id+'-log').querySelector('.entries.feed'); feedWrap.innerHTML='';
+  const feeds=model[id].log||[]; if(feeds.length===0){ feedWrap.innerHTML=`<div class="entry"><span class="ts">No feedings yet.</span><span></span></div>`; } else {
+    feeds.forEach(e=>feedWrap.insertAdjacentHTML('beforeend',`<div class="entry"><span class="ts">${fmtTs(e.ts)}</span><span class="tag">${html(e.bottle)}</span></div>`));
   }
-  // Diaper log
-  const diaWrap = $(id+'-log').querySelector('.entries.diaper');
-  diaWrap.innerHTML='';
-  const dlog = model[id].diaperLog || [];
-  if(dlog.length===0){
-    diaWrap.innerHTML = `<div class="entry"><span class="ts">No diaper changes yet.</span><span></span></div>`;
-  }else{
-    dlog.forEach(e=>{
-      diaWrap.insertAdjacentHTML('beforeend',
-        `<div class="entry"><span class="ts">${fmtTs(e.ts)}</span><span class="tag">Changed</span></div>`);
-    });
+  const diaWrap=$(id+'-log').querySelector('.entries.diaper'); diaWrap.innerHTML='';
+  const dlog=model[id].diaperLog||[]; if(dlog.length===0){ diaWrap.innerHTML=`<div class="entry"><span class="ts">No diaper changes yet.</span><span></span></div>`; } else {
+    dlog.forEach(e=>diaWrap.insertAdjacentHTML('beforeend',`<div class="entry"><span class="ts">${fmtTs(e.ts)}</span><span class="tag">Changed</span></div>`));
+  }
+  const miscWrap=$(id+'-log').querySelector('.entries.misc'); miscWrap.innerHTML='';
+  const mlog=model[id].miscLog||[]; if(mlog.length===0){ miscWrap.innerHTML=`<div class="entry"><span class="ts">No events yet.</span><span></span></div>`; } else {
+    mlog.forEach(e=>miscWrap.insertAdjacentHTML('beforeend',`<div class="entry"><span class="ts">${fmtTs(e.ts)}</span><span class="tag">${html(e.type)}</span></div>`));
   }
 }
+function logMisc(id, type, note){ model[id].miscLog.unshift({ts:now(), type, note:note||''}); model[id].miscLog = model[id].miscLog.slice(0,50); renderLogs(id); saveState(); }
 
-function fmtTs(ms){
-  const d = new Date(ms);
-  return d.toLocaleString([], { hour:'numeric', minute:'2-digit', month:'short', day:'numeric' });
-}
-function html(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
-
-function formatETA(ms){
-  if(ms <= 0) return 'due';
-  const totalSec = Math.ceil(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if(!DEMO){ return `${h}h ${m}m`; }
-  return (h>0?`${h}h `:'') + `${m}m ${String(s).padStart(2,'0')}s`;
-}
 function updateCountdown(id){
-  const etaEl = $(id+'-eta');
-  if(!model[id].nextFeedAt){ etaEl.textContent='—'; return; }
-  const ms = model[id].nextFeedAt - Date.now();
-  etaEl.textContent = formatETA(ms);
+  const etaEl=$(id+'-eta'); if(!model[id].nextFeedAt){ etaEl.textContent='—'; return; }
+  const ms=model[id].nextFeedAt - now(); etaEl.textContent = formatETA(ms);
 }
+function formatETA(ms){ if(ms<=0) return 'due'; const totalSec=Math.ceil(ms/1000); const h=Math.floor(totalSec/3600); const m=Math.floor((totalSec%3600)/60); const s=totalSec%60; return CONFIG.demo ? ((h>0?`${h}h `:'')+`${m}m ${String(s).padStart(2,'0')}s`) : `${h}h ${m}m`; }
 
-/* ------- Controls: bottle + interval save ------- */
+/* =========================
+   UI WIRING
+========================= */
 ['lyo','lya'].forEach(id=>{
-  $(id+'-bottle').addEventListener('change', ()=>{
-    model[id].bottle = $(id+'-bottle').value; saveState(); renderLogs(id);
-  });
+  $(id+'-bottle').addEventListener('change', ()=>{ model[id].bottle=$(id+'-bottle').value; saveState(); renderLogs(id); });
   $(id+'-save').addEventListener('click', ()=>{
-    const hours = Math.max(0, parseInt($(id+'-h').value||'0',10));
-    const mins  = Math.max(0, Math.min(59, parseInt($(id+'-m').value||'0',10)));
-    model[id].intervalMin = hours*60 + mins; if(model[id].intervalMin===0) model[id].intervalMin=1;
+    const hours=Math.max(0,parseInt($(id+'-h').value||'0',10));
+    const mins =Math.max(0,Math.min(59,parseInt($(id+'-m').value||'0',10)));
+    model[id].intervalMin = Math.max(1, hours*60 + mins);
     scheduleNextFeed(id); renderChild(id);
-    toast(`${cap(id)} feeding interval updated`, 't-teal');
-    toast(`${cap(id)} feeding interval updated to ${Math.floor(model[id].intervalMin/60)}h ${model[id].intervalMin%60}m`, 't-teal');
-
+    toast(`${cap(id)} feeding interval updated to ${hours}h ${mins}m`,'t-teal');
   });
 });
 
-/* -------- Init + timers -------- */
-loadState();
-ensureAudio();
-ensureTimers();
-renderChild('lyo');
-renderChild('lya');
+/* Speed switch */
+const modeSwitch = document.getElementById('modeSwitch');
+const hintSpeed  = document.getElementById('hintSpeed');
+modeSwitch.checked = CONFIG.demo;
+modeSwitch.addEventListener('change', ()=>{
+  CONFIG.demo = modeSwitch.checked;
+  hintSpeed.textContent = CONFIG.demo ? '1 min = 1 sec' : 'Real minutes';
+  // Recompute timers sensibly from now
+  ['lyo','lya'].forEach(id=>{ scheduleNextFeed(id); const SR=CONFIG.sleepRandom(); if(model[id].mood==='sleeping') model[id].wakeAt = now() + msFromMin(randInt(SR.min,SR.max)); });
+  saveState(); renderChild('lyo'); renderChild('lya');
+});
 
-setInterval(()=>{
-  ['lyo','lya'].forEach(id=>{
-    checkFeeding(id);
-    checkWake(id);
-    checkDiaperNudge(id);
-    updateCountdown(id);
-    // Fallback overdue check (survives tab reloads)
-if (model[id].overdueScheduledAt) {
-  const elapsed = Date.now() - model[id].overdueScheduledAt;
-  if (elapsed >= OVERDUE_CHECK_MIN * MILLIS_PER_MIN) {
-    runOverdueCheck(id);
-  }
+/* =========================
+   LOOP & INIT
+========================= */
+function init(){
+  loadState(); ensureAudio(); ensureTimers();
+  renderChild('lyo'); renderChild('lya'); renderStreakPanel();
+  setInterval(tick, 500);
 }
-  });
-}, 500);
+init();
 
-/* -------- Cross-tab sync -------- */
-window.addEventListener('storage', (ev)=>{
-  if(ev.key===STORAGE_KEY || ev.key===STORAGE_KEY+'.pulse'){
-    loadState(); renderChild('lyo'); renderChild('lya');
+/* =========================
+   STORAGE SYNC
+========================= */
+window.addEventListener('storage',(ev)=>{ if(ev.key===STORAGE_KEY || ev.key===STORAGE_KEY+'.pulse'){ loadState(); renderChild('lyo'); renderChild('lya'); }});
+
+/* =========================
+   OVERDUE FALLBACK
+========================= */
+function runOverdueCheck(id){ // (defined above too)
+  const since = model[id].overdueScheduledAt; if(!since) return;
+  if(!model[id].lastFedAt || model[id].lastFedAt < since){
+    notify(`${cap(id)} might still be hungry — want to double check?`,'t-red'); chimeOverdue();
+    if(!model[id].isSick && !model[id].needs.includes('Hungry')){ model[id].needs.push('Hungry'); renderChild(id); pulseRing(id,'hungry'); }
   }
-});
-
-/* -------- Helpers -------- */
-function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function cap(id){ return id==='lyo'?'Lyo':'Lya'; }
+  model[id].overdueTimer=null; model[id].overdueScheduledAt=null; saveState();
+}
 </script>
 </body>
 </html>
-
