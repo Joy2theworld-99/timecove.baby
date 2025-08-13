@@ -3,117 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lyo & Lya Multi-Need Halos</title>
+<title>Twin Halo States</title>
 <style>
   body {
-    background-color: #222;
-    display: flex;
-    gap: 50px;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    background-color: black;
     color: white;
-    font-family: sans-serif;
+    font-family: Arial, sans-serif;
+    text-align: center;
   }
-  .baby-container {
+  .twin-container {
+    display: inline-block;
+    margin: 30px;
     position: relative;
+  }
+  .halo-layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .twin-img {
+    display: block;
     width: 200px;
     height: 200px;
-  }
-  .baby-pic {
-    position: relative;
-    z-index: 2;
-    border-radius: 50%;
-    width: 100%;
-    height: 100%;
     object-fit: cover;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10;
   }
-  svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
+  .button-container {
+    margin-top: 15px;
+  }
+  .state-btn {
+    padding: 8px 12px;
+    margin: 3px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    color: white;
   }
 </style>
 </head>
 <body>
 
-<div class="baby-container" id="lyo-container">
-  <svg width="200" height="200">
-    <!-- Halos will be inserted here -->
-  </svg>
-  <img src="Lyo_Glyph_Clear.png" class="baby-pic" alt="Lyo">
-</div>
+<h1>Twins Halo State Tracker</h1>
 
-<div class="baby-container" id="lya-container">
-  <svg width="200" height="200">
-    <!-- Halos will be inserted here -->
-  </svg>
-  <img src="Lya_Glyph_Clear.png" class="baby-pic" alt="Lya">
+<div id="twins-area">
+  <div class="twin-container" id="lyo">
+    <img src="Lyo_Glyph_Clear.png" class="twin-img">
+    <div class="button-container">
+      <button class="state-btn" style="background-color: red;" onclick="toggleState('lyo','feeding')">Feeding</button>
+      <button class="state-btn" style="background-color: orange;" onclick="toggleState('lyo','diaper')">Diaper</button>
+      <button class="state-btn" style="background-color: blue;" onclick="toggleState('lyo','bath')">Bath</button>
+      <button class="state-btn" style="background-color: purple;" onclick="toggleState('lyo','play')">Play</button>
+      <button class="state-btn" style="background-color: green;" onclick="toggleState('lyo','sick')">Sick</button>
+    </div>
+  </div>
+
+  <div class="twin-container" id="lya">
+    <img src="Lya_Glyph_Clear.png" class="twin-img">
+    <div class="button-container">
+      <button class="state-btn" style="background-color: red;" onclick="toggleState('lya','feeding')">Feeding</button>
+      <button class="state-btn" style="background-color: orange;" onclick="toggleState('lya','diaper')">Diaper</button>
+      <button class="state-btn" style="background-color: blue;" onclick="toggleState('lya','bath')">Bath</button>
+      <button class="state-btn" style="background-color: purple;" onclick="toggleState('lya','play')">Play</button>
+      <button class="state-btn" style="background-color: green;" onclick="toggleState('lya','sick')">Sick</button>
+    </div>
+  </div>
 </div>
 
 <script>
-/**
- * Available states and their colors
- * Order here determines inner-to-outer ring arrangement
- */
-const NEEDS = {
+const stateColors = {
   feeding: 'red',
-  diaper: 'yellow',
+  diaper: 'orange',
   bath: 'blue',
-  play: 'orange',
-  nap: 'purple',
-  comfort: 'pink', // future state
-  sick: 'limegreen' // will override all with flashing
+  play: 'purple',
+  sick: 'limegreen'
 };
 
-function setNeeds(babyId, needsArray) {
-  const container = document.getElementById(babyId + '-container');
-  const svg = container.querySelector('svg');
-  svg.innerHTML = ''; // clear old halos
+const twinStates = {
+  lyo: { feeding: false, diaper: false, bath: false, play: false, sick: false },
+  lya: { feeding: false, diaper: false, bath: false, play: false, sick: false }
+};
 
-  // If sick, override with flashing green ring
-  if (needsArray.includes('sick')) {
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-    circle.setAttribute('cx', 100);
-    circle.setAttribute('cy', 100);
-    circle.setAttribute('r', 90);
-    circle.setAttribute('stroke', NEEDS.sick);
-    circle.setAttribute('stroke-width', 10);
-    circle.setAttribute('fill', 'none');
-    circle.style.animation = 'flash 1s infinite';
-    svg.appendChild(circle);
-    return;
-  }
-
-  // Create concentric rings for each need
-  needsArray.forEach((need, index) => {
-    const color = NEEDS[need] || 'white';
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-    circle.setAttribute('cx', 100);
-    circle.setAttribute('cy', 100);
-    circle.setAttribute('r', 90 - (index * 12)); // shrink radius for each outer ring
-    circle.setAttribute('stroke', color);
-    circle.setAttribute('stroke-width', 8);
-    circle.setAttribute('fill', 'none');
-    svg.appendChild(circle);
-  });
+function toggleState(twinId, state) {
+  twinStates[twinId][state] = !twinStates[twinId][state];
+  renderHalos(twinId);
 }
 
-// Flash animation for sick state
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-`;
-document.head.appendChild(style);
+function renderHalos(twinId) {
+  const container = document.getElementById(twinId);
+  const oldHalos = container.querySelectorAll('.halo-layer');
+  oldHalos.forEach(h => h.remove());
 
-// Example: Lyo has feeding + diaper + nap needs
-setNeeds('lyo', ['feeding', 'diaper', 'nap']);
-// Lya is sick
-setNeeds('lya', ['sick']);
+  const activeStates = Object.keys(twinStates[twinId]).filter(s => twinStates[twinId][s]);
+
+  activeStates.forEach((state, index) => {
+    const halo = document.createElement('div');
+    halo.className = 'halo-layer';
+    halo.style.width = `${220 + index * 20}px`;
+    halo.style.height = `${220 + index * 20}px`;
+    halo.style.border = `5px solid ${stateColors[state]}`;
+    halo.style.zIndex = 1;
+    container.appendChild(halo);
+  });
+}
 </script>
 
 </body>
