@@ -1,161 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Twin Monitor</title>
-  <style>
-    body {
-      background-color: black;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 1rem;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Timecove Monitor: Lyo & Lya</title>
+<style>
+  :root{
+    --ink:#fff; --panel:#141414; --muted:#b7c0c4;
+  }
+  /* ===== LAYOUT ===== */
+  html,body{margin:0;background:#000;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  h1{font-size:clamp(1.6rem,4vw,3rem);text-align:center;margin:28px 0 18px}
+  .wrap{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:0 16px 40px}
+  .card{
+    background:var(--panel); border-radius:24px; padding:28px 22px 22px;
+    width:min(520px,92vw); box-shadow:0 12px 50px rgba(0,0,0,.55);
+  }
+  .name{font-weight:900; font-size:clamp(1.3rem,2.4vw,2rem); text-align:center; margin:10px 0 8px}
 
-    h1 {
-      margin-bottom: 2rem;
-    }
+  /* ===== GLYPH + LAYERS ===== */
+  .glyph-wrap{
+    position:relative; width:220px; height:220px; margin:10px auto 10px; 
+  }
+  .glyph-img{
+    position:absolute; inset:0; margin:auto; width:140px; height:140px;
+    object-fit:contain; image-rendering:auto; z-index:3;
+  }
+  /* three concentric halos we can color independently */
+  .halo{
+    position:absolute; inset:0; margin:auto; width:220px; height:220px;
+    border-radius:50%; pointer-events:none; z-index:0; opacity:0; transition:opacity .35s ease, filter .35s ease;
+    filter: blur(10px) saturate(1.1);
+  }
+  .halo.mid   { width:200px; height:200px; z-index:1 }
+  .halo.inner { width:170px; height:170px; z-index:2 }
 
-    .twins-container {
-      display: flex;
-      justify-content: space-around;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
+  /* sickness override */
+  .sick { animation:pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse {
+    0% { transform:scale(1);   filter:blur(10px) saturate(1.1); }
+    50%{ transform:scale(1.06);filter:blur(14px) saturate(1.25); }
+    100%{transform:scale(1);   filter:blur(10px) saturate(1.1); }
+  }
 
-    .twin {
-      position: relative;
-      padding: 1rem;
-      border-radius: 10px;
-      width: 200px;
-      background-color: #111;
-    }
+  /* ===== BUTTONS / TEXT ===== */
+  .btn-row{display:flex;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .btn{
+    border:0; border-radius:12px; padding:12px 18px; font-weight:800; cursor:pointer;
+    color:#001617; background:#2bb7ab; /* calm teal */
+  }
+  .btn[disabled]{background:#4a4f52;color:#b8c2c7;cursor:not-allowed}
+  .count{margin-top:8px; text-align:center; color:var(--muted)}
 
-    .aura {
-      position: absolute;
-      top: -10px; left: -10px;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .puke-green {
-      background-color: 9D9A1C;
-      animation: pulse 1s infinite;
-      opacity: 0.75;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.75; }
-      50% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.75; }
-    }
-
-    .glyph {
-      position: relative;
-      z-index: 2;
-      width: 120px;
-      height: 120px;
-      margin: 0 auto;
-    }
-
-    .status-text {
-      margin-top: 0.5rem;
-      font-weight: bold;
-    }
-
-    button {
-      margin: 0.5rem;
-      padding: 0.6rem 1rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .disabled {
-      background-color: #444;
-      color: #999;
-      cursor: not-allowed;
-    }
-  </style>
+  /* desktop side-by-side spacing */
+  @media(min-width:1100px){ .wrap{gap:36px} .card{width:520px} }
+</style>
 </head>
 <body>
-  <h1>Twins' Real-Time Monitor</h1>
-  <div class="twins-container">
-    <div class="twin" id="lyo">
-      <div class="aura" id="lyo-aura"></div>
-      <img src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" class="glyph" />
-      <div class="status-text" id="lyo-status">All is calm</div>
-      <button id="lyo-feed">Feed Me</button>
-    </div>
+  <h1>Timecove Monitor: Lyo & Lya</h1>
 
-    <div class="twin" id="lya">
-      <div class="aura" id="lya-aura"></div>
-      <img src="Lya_Glyph_Clear.png" alt="Lya Glyph" class="glyph" />
-      <div class="status-text" id="lya-status">All is calm</div>
-      <button id="lya-feed">Feed Me</button>
-    </div>
+  <div class="wrap">
+    <!-- LYO -->
+    <section class="card" id="lyo">
+      <div class="glyph-wrap">
+        <div class="halo outer" id="lyo-h1"></div>
+        <div class="halo mid"   id="lyo-h2"></div>
+        <div class="halo inner" id="lyo-h3"></div>
+        <img class="glyph-img" src="Lyo_Glyph_Clear.png" alt="Lyo"/>
+      </div>
+      <div class="name">Lyo</div>
+
+      <div class="btn-row">
+        <button class="btn" id="lyo-feed">Feed Me!</button>
+      </div>
+      <div class="count" id="lyo-count"></div>
+    </section>
+
+    <!-- LYA -->
+    <section class="card" id="lya">
+      <div class="glyph-wrap">
+        <div class="halo outer" id="lya-h1"></div>
+        <div class="halo mid"   id="lya-h2"></div>
+        <div class="halo inner" id="lya-h3"></div>
+        <img class="glyph-img" src="Lya_Glyph_Clear.png" alt="Lya"/>
+      </div>
+      <div class="name">Lya</div>
+
+      <div class="btn-row">
+        <button class="btn" id="lya-feed">Feed Me!</button>
+      </div>
+      <div class="count" id="lya-count"></div>
+    </section>
   </div>
 
-  <script>
-    const twins = {
-      lyo: {
-        isSick: false,
-        isHungry: true,
-      },
-      lya: {
-        isSick: true, // for testing
-        isHungry: false,
-      },
-    };
+<script>
+/* ========== CONFIG ==========
+   (Adjust intervals per twin; hrs -> ms) */
+const CONFIG = {
+  lyo: { feedIntervalHrs: 3, isSick: false },
+  lya: { feedIntervalHrs: 3, isSick: false } // flip to true to test sickness override
+};
 
-    function updateTwinUI(name) {
-      const twin = twins[name];
-      const aura = document.getElementById(`${name}-aura`);
-      const status = document.getElementById(`${name}-status`);
-      const feedBtn = document.getElementById(`${name}-feed`);
+/* Colors (RGB arrays) for precise gradients */
+const COLORS = {
+  calm:   [  0, 255, 255], // cyan
+  warn:   [255, 235,  59], // yellow
+  alert:  [255, 152,   0], // orange
+  hungry: [244,  67,  54], // red
+  sick:   [141, 182,   0]  // puke green
+};
 
-      // Reset
-      aura.className = 'aura';
+/* ---------- Helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const now = () => Date.now();
+const hours = h => h*60*60*1000;
 
-      if (twin.isSick) {
-        aura.classList.add('puke-green');
-        status.innerText = `${capitalize(name)} is not feeling well`;
-        feedBtn.disabled = true;
-        feedBtn.classList.add('disabled');
-      } else if (twin.isHungry) {
-        aura.style.backgroundColor = 'red';
-        status.innerText = `${capitalize(name)} is hungry`;
-        feedBtn.disabled = false;
-        feedBtn.classList.remove('disabled');
-      } else {
-        aura.style.backgroundColor = 'blue';
-        status.innerText = `All is calm`;
-        feedBtn.disabled = true;
-        feedBtn.classList.add('disabled');
-      }
-    }
+function rgba(rgb, a){ const [r,g,b]=rgb; return `rgba(${r},${g},${b},${a})`; }
 
-    function capitalize(name) {
-      return name.charAt(0).toUpperCase() + name.slice(1);
-    }
+function setHalo(el, rgb){
+  if(!rgb){ el.style.opacity = 0; el.classList.remove('sick'); return; }
+  el.style.opacity = 1;
+  el.style.background = `radial-gradient(circle,
+     ${rgba(rgb,.42)} 0%,
+     ${rgba(rgb,.22)} 55%,
+     ${rgba(rgb,0)} 72%)`;
+  el.style.boxShadow = `0 0 36px 10px ${rgba(rgb,.45)}`;
+  el.classList.remove('sick');
+}
 
-    function setup() {
-      ['lyo', 'lya'].forEach(name => {
-        const feedBtn = document.getElementById(`${name}-feed`);
-        feedBtn.addEventListener('click', () => {
-          twins[name].isHungry = false;
-          updateTwinUI(name);
-        });
-        updateTwinUI(name);
-      });
-    }
+function setSick(el){ // puke green pulsing override
+  setHalo(el, COLORS.sick);
+  el.classList.add('sick');
+}
 
-    setup();
-  </script>
+/* ---------- Persistence ---------- */
+function keyLastFeed(id){ return `tc_lastFeed_${id}`; }
+function loadLastFeed(id){
+  const k = keyLastFeed(id);
+  const saved = localStorage.getItem(k);
+  if(saved) return +saved;
+  const t = now(); localStorage.setItem(k, t); return t; // start calm
+}
+function saveLastFeed(id, t){ localStorage.setItem(keyLastFeed(id), t); }
+
+/* ---------- UI Update ---------- */
+function formatRemaining(ms){
+  if(ms <= 0) return "now";
+  const h = Math.floor(ms/3_600_000);
+  const m = Math.floor((ms%3_600_000)/60_000);
+  return `${h}h ${m}m`;
+}
+
+function updateTwin(id){
+  const cfg = CONFIG[id];
+  const btn = $(`#${id}-feed`);
+  const count = $(`#${id}-count`);
+  const h1 = $(`#${id}-h1`), h2 = $(`#${id}-h2`), h3 = $(`#${id}-h3`);
+
+  // sickness override
+  if(cfg.isSick){
+    setSick(h1); h2.style.opacity=0; h3.style.opacity=0;
+    btn.disabled = true; btn.textContent = "Not Feeling Well"; btn.style.background = "#4a4f52"; 
+    count.textContent = "⚕️ Check on them";
+    return;
+  }
+
+  const last = loadLastFeed(id);
+  const interval = hours(cfg.feedIntervalHrs);
+  const remaining = interval - (now() - last);
+
+  // pick colors based on remaining time
+  let layers = []; // outer -> inner
+  if(remaining <= 0){ // overdue: hungry
+    layers = [COLORS.hungry];
+    btn.disabled = false; btn.textContent = "Feed Me!"; btn.style.background = "#e85d58";
+    count.textContent = "Next feed: now";
+  } else if(remaining <= 30*60*1000){ // <30m alert
+    layers = [COLORS.alert];
+    btn.disabled = true; btn.textContent = "Fed"; btn.style.background = "#4a4f52";
+    count.textContent = `Next feed in: ${formatRemaining(remaining)}`;
+  } else if(remaining <= 60*60*1000){ // <60m warning
+    layers = [COLORS.warn];
+    btn.disabled = true; btn.textContent = "Fed"; btn.style.background = "#4a4f52";
+    count.textContent = `Next feed in: ${formatRemaining(remaining)}`;
+  } else { // calm
+    layers = [COLORS.calm];
+    btn.disabled = true; btn.textContent = "Fed"; btn.style.background = "#4a4f52";
+    count.textContent = `Next feed in: ${formatRemaining(remaining)}`;
+  }
+
+  // apply up to 3 layers (we'll use just one for feeding now; ready for more later)
+  setHalo(h1, layers[0] || null);
+  setHalo(h2, layers[1] || null);
+  setHalo(h3, layers[2] || null);
+}
+
+/* ---------- Events ---------- */
+function wireTwin(id){
+  $(`#${id}-feed`).addEventListener('click', ()=>{
+    if(CONFIG[id].isSick) return;
+    saveLastFeed(id, now());
+    updateTwin(id);
+  });
+  updateTwin(id);
+}
+
+/* ---------- Init ---------- */
+["lyo","lya"].forEach(wireTwin);
+setInterval(()=>["lyo","lya"].forEach(updateTwin), 60_000); // update each minute
+</script>
 </body>
 </html>
-
