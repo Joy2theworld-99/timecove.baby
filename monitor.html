@@ -91,6 +91,7 @@
         <button class="alert" onclick="setLyoState('alert')">Alert</button>
         <button class="dreaming" onclick="setLyoState('dreaming')">Dreaming</button>
         <button class="sleeping" onclick="setLyoState('sleeping')">Sleeping</button>
+        <button id="feed-lyo" onclick="feedBaby('lyo')">Feed Lyo</button>
       </div>
     </div>
 
@@ -105,6 +106,7 @@
         <button class="alert" onclick="setLyaState('alert')">Alert</button>
         <button class="dreaming" onclick="setLyaState('dreaming')">Dreaming</button>
         <button class="sleeping" onclick="setLyaState('sleeping')">Sleeping</button>
+        <button id="feed-lya" onclick="feedBaby('lya')">Feed Lya</button>
       </div>
     </div>
 
@@ -142,6 +144,83 @@
   };
   wrapper.style.boxShadow = glowStyles[state];
 }
+    // Initialize hunger and time
+let lyo = { hunger: 0, state: "calm", name: "Lyo" };
+let lya = { hunger: 0, state: "calm", name: "Lya" };
+
+// Simulated Time (0-23)
+let simHour = 6;
+
+// Bottle inventory
+let bottlesReady = 4; // for future use
+
+// Hunger builder – every 30s = 30 mins
+setInterval(() => {
+  simHour = (simHour + 1) % 24;
+
+  lyo.hunger += 10;
+  lya.hunger += 10;
+
+  updateFeedingState(lyo, "lyo");
+  updateFeedingState(lya, "lya");
+
+  updateFeedButtons();
+}, 30000);
+
+// Determine hunger state
+function updateFeedingState(baby, idPrefix) {
+  const wrapper = document.getElementById(`${idPrefix}-glow-wrapper`);
+  const glyph = document.getElementById(`${idPrefix}-glyph`);
+  const hunger = baby.hunger;
+
+  let state = "calm";
+  if (hunger >= 90) state = "crying";
+  else if (hunger >= 70) state = "fussy";
+  else if (hunger >= 40) state = "alert";
+
+  baby.state = state;
+
+  const glowStyles = {
+    calm: '0 0 20px #4db6ac',
+    alert: '0 0 25px #ffc107',
+    fussy: '0 0 25px #ff9800',
+    crying: '0 0 30px #f44336'
+  };
+  wrapper.style.boxShadow = glowStyles[state];
+}
+
+// Determine bottle type based on time
+function getBottleType() {
+  if (simHour >= 6 && simHour < 18) return "Echo Sip";
+  else if (simHour >= 18 && simHour < 22) return "Starbottle";
+  else return "Dreammilk";
+}
+
+// Feeding logic
+function feedBaby(idPrefix) {
+  const baby = idPrefix === "lyo" ? lyo : lya;
+  const bottle = getBottleType();
+
+  if (baby.hunger < 40) {
+    console.log(`${baby.name} isn't hungry right now.`);
+    return;
+  }
+
+  // Reset hunger
+  baby.hunger = 0;
+  baby.state = "calm";
+  updateFeedingState(baby, idPrefix);
+
+  console.log(`You gave ${baby.name} a ${bottle}. They seem content.`);
+}
+
+// Update button text
+function updateFeedButtons() {
+  const bottle = getBottleType();
+  document.getElementById("feed-lyo").innerText = `Feed Lyo (${bottle})`;
+  document.getElementById("feed-lya").innerText = `Feed Lya (${bottle})`;
+}
+
   </script>
 </body>
 </html>
