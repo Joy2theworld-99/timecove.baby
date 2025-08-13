@@ -63,6 +63,12 @@
     .buttons button:hover {
       transform: scale(1.05);
     }
+    .glow-wrapper {
+  display: inline-block;
+  padding: 10px;
+  border-radius: 50%;
+  transition: box-shadow 0.5s ease;
+}
 
     .calm { background-color: #4db6ac; }
     .alert { background-color: #f44336; }
@@ -77,7 +83,9 @@
     <!-- Lyo -->
     <div class="monitor" id="lyo-monitor">
       <h2>Lyo</h2>
-      <img id="Lyo_Glyph_Clear.png" class="glyph" src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" />
+     <div id="lyo-glow-wrapper" class="glow-wrapper">
+  <img id="Lyo_Glyph_Clear.png" class="glyph" src="Lyo_Glyph_Clear.png" alt="Lyo Glyph" />
+</div>
       <div class="buttons">
         <button class="calm" onclick="setLyoState('calm')">Calm</button>
         <button class="alert" onclick="setLyoState('alert')">Alert</button>
@@ -111,9 +119,16 @@
       sleeping: '0 0 15px #90a4ae'
     };
 
-    function setLyoState(state) {
-      lyoGlyph.style.boxShadow = glowStyles[state];
-    }
+   function setLyoState(state) {
+  const wrapper = document.getElementById('lyo-glow-wrapper');
+  const glowStyles = {
+    calm: '0 0 20px #4db6ac',
+    alert: '0 0 25px #f44336',
+    dreaming: '0 0 25px #9575cd',
+    sleeping: '0 0 15px #90a4ae'
+  };
+  wrapper.style.boxShadow = glowStyles[state];
+}
 
     function setLyaState(state) {
       lyaGlyph.style.boxShadow = glowStyles[state];
