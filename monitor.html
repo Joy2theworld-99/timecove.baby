@@ -279,23 +279,24 @@
 <script>
 /* ---------------- CONFIG ----------------
    DEMO: 1 minute = 1 second for quick testing. */
-const DEMO = true;
-const MILLIS_PER_MIN = DEMO ? 1000 : 60_000;
+const DEMO = false;                // real minutes
+const MILLIS_PER_MIN = 60_000;
 
 /* Probability of needs on wake (0..1) */
-const HUNGRY_ON_WAKE_PROB = 0.30;
-const DIAPER_ON_WAKE_PROB = 0.25;
+const HUNGRY_ON_WAKE_PROB = 0.15;  // was 0.30
+const DIAPER_ON_WAKE_PROB = 0.18;  // was 0.25
 
 /* Gentle nudge if diaper unresolved >= this many minutes */
-const DIAPER_NUDGE_MIN = DEMO ? 5 : 10;
+// nudge diaper a bit later IRL
+const DIAPER_NUDGE_MIN = DEMO ? 5 : 15;
 
 /* NEW: Nudge if Hungry is cleared without feeding */
 const OVERDUE_CHECK_MIN = DEMO ? 7 : 7;      // minutes
 const STREAK_GRACE_MIN  = DEMO ? 10 : 10;    // grace beyond expected for streak
 
 const SLEEP_RANDOM = {
-  min: DEMO ? 3 : 30,
-  max: DEMO ? 7 : 120
+  min: DEMO ? 3 : 180,              // ~3–6 hours
+  max: DEMO ? 7 : 360
 };
 
 const STORAGE_KEY = 'timecove.twins.v6'; // bump version for new fields
@@ -472,34 +473,39 @@ function clearDiaperTimers(id){
 
 /* -------- Overdue nudge if Hungry cleared w/o feed -------- */
 function clearHungryWithoutFeeding(id){
-  // remove Hungry ring, start a short check window
+  // remove Hungry, re-render
   const idx = model[id].needs.indexOf('Hungry');
   if(idx>-1) model[id].needs.splice(idx,1);
   renderChild(id); saveState();
 
-  // (re)start overdue timer
+  // immediate feedback so it "does something" visibly
+  toast(`Okay — I’ll check back on ${cap(id)} in ~${OVERDUE_CHECK_MIN} min`, 't-orange');
+
+  // (re)start overdue window
   if(model[id].overdueTimer){ clearTimeout(model[id].overdueTimer); }
   model[id].overdueScheduledAt = Date.now();
 
-  model[id].overdueTimer = setTimeout(()=>{
-    // If no feed occurred since scheduling, nudge & re-show Hungry ring visually
-    const since = model[id].overdueScheduledAt;
-    if(!model[id].lastFedAt || model[id].lastFedAt < since){
-      notify(`${cap(id)} might still be hungry — want to double check?`, 't-red');
-      chimeOverdue();
-      // re-surface Hungry as a gentle reminder
-      if(!model[id].needs.includes('Hungry')){
-        model[id].needs.push('Hungry');
-        const g = document.getElementById(id+'-rings');
-        renderChild(id);
-        const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke===COLOR.hungry);
-        if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2600); }
-      }
+  model[id].overdueTimer = setTimeout(()=> runOverdueCheck(id), OVERDUE_CHECK_MIN * MILLIS_PER_MIN);
+  saveState();
+}
+
+function runOverdueCheck(id){
+  const since = model[id].overdueScheduledAt;
+  if(!since){ return; }
+  // if no feed happened since scheduling → nudge & re-show hungry
+  if(!model[id].lastFedAt || model[id].lastFedAt < since){
+    notify(`${cap(id)} might still be hungry — want to double check?`, 't-red');
+    chimeOverdue();
+    if(!model[id].needs.includes('Hungry')){
+      model[id].needs.push('Hungry');
+      renderChild(id);
+      const g = document.getElementById(id+'-rings');
+      const ring = [...g.querySelectorAll('.ring')].find(r => r.style.stroke===COLOR.hungry);
+      if(ring){ ring.classList.add('nudgePulse'); setTimeout(()=>ring.classList.remove('nudgePulse'), 2600); }
     }
-    model[id].overdueTimer = null;
-    model[id].overdueScheduledAt = null;
-    saveState();
-  }, OVERDUE_CHECK_MIN * MILLIS_PER_MIN);
+  }
+  model[id].overdueTimer = null;
+  model[id].overdueScheduledAt = null;
   saveState();
 }
 
@@ -730,6 +736,8 @@ function updateCountdown(id){
     model[id].intervalMin = hours*60 + mins; if(model[id].intervalMin===0) model[id].intervalMin=1;
     scheduleNextFeed(id); renderChild(id);
     toast(`${cap(id)} feeding interval updated`, 't-teal');
+    toast(`${cap(id)} feeding interval updated to ${Math.floor(model[id].intervalMin/60)}h ${model[id].intervalMin%60}m`, 't-teal');
+
   });
 });
 
@@ -746,6 +754,13 @@ setInterval(()=>{
     checkWake(id);
     checkDiaperNudge(id);
     updateCountdown(id);
+    // Fallback overdue check (survives tab reloads)
+if (model[id].overdueScheduledAt) {
+  const elapsed = Date.now() - model[id].overdueScheduledAt;
+  if (elapsed >= OVERDUE_CHECK_MIN * MILLIS_PER_MIN) {
+    runOverdueCheck(id);
+  }
+}
   });
 }, 500);
 
