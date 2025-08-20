@@ -98,6 +98,13 @@
   </label>
   <span class="chip" id="hintSpeed">1 min = 1 sec</span>
 </div>
+  <br>
+  <div id="chat-panel" class="log">
+  <h4>Chat with Lyo & Lya</h4>
+  <div id="chat-log" class="entries misc" style="max-height:180px; overflow:auto;"></div>
+  <input id="chat-input" type="text" placeholder="Say something..." style="width:100%; padding:8px; margin-top:8px; border-radius:8px; border:none;">
+</div>
+  <br>
 
 <!-- STREAK SUMMARY -->
 <section class="streak" id="streak">
@@ -735,12 +742,7 @@ function addChatEntry(speaker, message) {
 ========================= */
 window.addEventListener('storage',(ev)=>{ if(ev.key===STORAGE_KEY || ev.key===STORAGE_KEY+'.pulse'){ loadState(); renderChild('lyo'); renderChild('lya'); }});
 </script>
-  
-  <div id="chat-panel" class="log">
-  <h4>Chat with Lyo & Lya</h4>
-  <div id="chat-log" class="entries misc" style="max-height:180px; overflow:auto;"></div>
-  <input id="chat-input" type="text" placeholder="Say something..." style="width:100%; padding:8px; margin-top:8px; border-radius:8px; border:none;">
-</div>
+
  
 </body>
 </html>
