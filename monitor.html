@@ -689,12 +689,62 @@ function init(){
   setInterval(tick, 500);
 }
 init();
+  const chatLog = document.getElementById('chat-log');
+const chatInput = document.getElementById('chat-input');
 
+chatInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    const msg = chatInput.value.trim();
+    if (msg) {
+      addChatEntry('You', msg);
+      respondToChat(msg);
+      chatInput.value = '';
+    }
+  }
+});
+
+function addChatEntry(speaker, message) {
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<span class="ts">${speaker}:</span><span>${html(message)}</span>`;
+  chatLog.appendChild(entry);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+ function respondToChat(msg) {
+  const lower = msg.toLowerCase();
+
+  if (lower.includes('hi') || lower.includes('hello')) {
+    addChatEntry('Lyo & Lya', 'Hi hi! 👶👶');
+  } else if (lower.includes('hungry')) {
+    model.lyo.needs.push('Hungry');
+    model.lya.needs.push('Hungry');
+    toast('Okay, they’ll be hungry now!','t-red');
+    renderChild('lyo'); renderChild('lya');
+    addChatEntry('Lyo & Lya', 'We’re hungry now! 🍽️');
+  } else if (lower.includes('sleep')) {
+    model.lyo.mood = 'sleeping'; model.lyo.wakeAt = now() + msFromMin(5);
+    model.lya.mood = 'sleeping'; model.lya.wakeAt = now() + msFromMin(5);
+    renderChild('lyo'); renderChild('lya');
+    addChatEntry('Lyo & Lya', 'Zzz... goodnight! 🌙');
+  } else {
+    addChatEntry('Lyo & Lya', 'Boop? 🤔 We didn’t understand that yet.');
+  }
+}
 /* =========================
    STORAGE SYNC
 ========================= */
 window.addEventListener('storage',(ev)=>{ if(ev.key===STORAGE_KEY || ev.key===STORAGE_KEY+'.pulse'){ loadState(); renderChild('lyo'); renderChild('lya'); }});
 </script>
+/* =========================
+   CHAT FUNCTION
+========================= */
+  
+  <div id="chat-panel" class="log">
+  <h4>Chat with Lyo & Lya</h4>
+  <div id="chat-log" class="entries misc" style="max-height:180px; overflow:auto;"></div>
+  <input id="chat-input" type="text" placeholder="Say something..." style="width:100%; padding:8px; margin-top:8px; border-radius:8px; border:none;">
+</div>
+ 
 </body>
 </html>
 
